@@ -262,12 +262,12 @@
                 <p><strong>Authorization Regions:</strong> ${Array.isArray(reseller.authorizationRegions) ? reseller.authorizationRegions.join(', ') : 'N/A'}</p>
                 <p><strong>Additional Information:</strong> ${reseller.additionalInfo || 'N/A'}</p>
                 <p><strong>BitBox Account Manager:</strong> ${reseller.bitboxAccountManager || 'N/A'}</p>
-                <p><strong>GST Certificate:</strong></p> <a href="https://bitbox-admin.onrender.com/${reseller.gstCertificate}">${reseller.gstCertificate || 'N/A'}</a>
-                <p><strong>PAN Card:</strong></p> <a href="https://bitbox-admin.onrender.com/${reseller.panCard}">${reseller.panCard || 'N/A'}</a>
-                <p><strong>MSME Certificate:</strong></p> <a href="https://bitbox-admin.onrender.com/${reseller.msmeCertificate}">${reseller.msmeCertificate || 'N/A'}</a>
-                <p><strong>PL Statement:</strong></p> <a href="https://bitbox-admin.onrender.com/${reseller.plStatement}">${reseller.plStatement || 'N/A'}</a>
-                <p><strong>GemSellerID:</strong></p> <a href="https://bitbox-admin.onrender.com/${reseller.gemSellerIdScreenshot}">${reseller.gemSellerIdScreenshot || 'N/A'}</a>
-                <p><strong>Declaration Form:</strong></p> <a href="https://bitbox-admin.onrender.com/${reseller.declarationForm}">${reseller.declarationForm || 'N/A'}</a>
+                <p><strong>GST Certificate:</strong></p> <a href="http://admin.bitboxpc.com/${reseller.gstCertificate}">${reseller.gstCertificate || 'N/A'}</a>
+                <p><strong>PAN Card:</strong></p> <a href="http://admin.bitboxpc.com/${reseller.panCard}">${reseller.panCard || 'N/A'}</a>
+                <p><strong>MSME Certificate:</strong></p> <a href="http://admin.bitboxpc.com/${reseller.msmeCertificate}">${reseller.msmeCertificate || 'N/A'}</a>
+                <p><strong>PL Statement:</strong></p> <a href="http://admin.bitboxpc.com/${reseller.plStatement}">${reseller.plStatement || 'N/A'}</a>
+                <p><strong>GemSellerID:</strong></p> <a href="http://admin.bitboxpc.com/${reseller.gemSellerIdScreenshot}">${reseller.gemSellerIdScreenshot || 'N/A'}</a>
+                <p><strong>Declaration Form:</strong></p> <a href="http://admin.bitboxpc.com/${reseller.declarationForm}">${reseller.declarationForm || 'N/A'}</a>
             `;
             document.getElementById('resellerDetailsContent').innerHTML = detailsContent;
             openModal();

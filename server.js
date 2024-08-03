@@ -39,7 +39,7 @@ app.use((req, res, next) => {
 
 
 //MongoDB Connecction with URL
-const dbURI = 'mongodb+srv://Bitbox-admin:Bitbox-admin@cluster0.gpzogeq.mongodb.net/Bitbox-admin?retryWrites=true&w=majority&appName=Cluster0';
+const dbURI = 'mongodb://127.0.0.1:27017/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+2.2.10';
 mongoose.connect(dbURI)
     .then(() => {
         //('MongoDB connected');
