@@ -697,7 +697,7 @@ router.post('/verify-warranty', async (req, res) => {
                 </div>
             </div>
 
-            <table class="specs-table">
+               <table class="specs-table">
                 <thead>
                     <tr>
                         <th>Specification</th>
@@ -705,30 +705,21 @@ router.post('/verify-warranty', async (req, res) => {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Processor</td>
-                        <td>${serialDetails.processor}</td>
-                    </tr>
-                    <tr>
-                        <td>Motherboard</td>
-                        <td>${serialDetails.motherboard}</td>
-                    </tr>
-                    <tr>
-                        <td>RAM</td>
-                        <td>${serialDetails.RAM1}</td>
-                    </tr>
-                    <tr>
-                        <td>SSD</td>
-                        <td>${serialDetails.SSD_SATA}</td>
-                    </tr>
-                    <tr>
-                        <td>HDD</td>
-                        <td>${serialDetails.HDD1}</td>
-                    </tr>
-                    <tr>
-                        <td>Monitor Size</td>
-                        <td>${serialDetails.monitorSize}</td>
-                    </tr>
+                    ${Object.entries(serialDetails._doc)
+                        .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'testedBy', 'uploadedFile', 'dynamicFields'].includes(key))
+                        .map(([key, value]) => `
+                            <tr>
+                                <td>${key}</td>
+                                <td>${value}</td>
+                            </tr>
+                        `).join('')}
+                    ${Array.from(serialDetails.dynamicFields || [])
+                        .map(([key, value]) => `
+                            <tr>
+                                <td>${key}</td>
+                                <td>${value}</td>
+                            </tr>
+                        `).join('')}
                 </tbody>
             </table>
         </div>
