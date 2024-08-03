@@ -768,8 +768,8 @@ router.post('/verify-warranty', async (req, res) => {
                 .replace('{purchaseDate}', purchaseDate)
                 .replace('{expiryDate}', expiryDateObj.toDateString())
                 .replace('{duration}', duration)
-                .replace('{warrantyType}', warrantyType)
-                .replace('{certificateID}', certificateID);
+                .replace('{warrantyType}', warrantyType);
+                
 
             // Send email with attachment
             async function sendMail() {
