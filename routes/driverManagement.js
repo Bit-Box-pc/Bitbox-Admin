@@ -177,7 +177,7 @@ router.post('/Driver-Delete/:id', async (req, res) => {
         }
         const loggedIN = true;
         const drivers = await Driver.find();
-        res.json({ success: true, message: 'Driver Deleted successfully', driver });
+        res.json({message: 'Driver Deleted successfully'});
     } catch (error) {
         res.status(500).json({ success: false, message: 'Failed to delete driver', error });
     }
