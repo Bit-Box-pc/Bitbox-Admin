@@ -266,7 +266,7 @@ function deleteDriver(driverId) {
             alert('Driver deleted successfully');
             location.reload(); // Reload the page to show updated data
         } else {
-            alert('Failed to delete driver: ' + data.message);
+            alert('' + data.message);
         }
     })
     .catch(error => {
