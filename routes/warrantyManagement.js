@@ -1130,7 +1130,6 @@ router.delete('/delete-reseller/:id', async (req, res) => {
     }
 });
 
-
 router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req, res) => {
     const warrantyId = req.params.warrantyId;
     const updatedWarrantyData = req.body;
@@ -1161,147 +1160,138 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
             
             const warrantyImageSrc = getWarrantyImage(updatedWarrantyData.durationnew);
             const expiryDate = new Date(warranty.expiryDate).toDateString();
-            const serialDetails = await SerialNumber.findOne({ serialNumber: updatedWarrantyData.serialNumber });
     
             const pdfContent = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warranty Certificate</title>
-    <style>
-        /* CSS styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        .certificate {
-            padding: 20px;
-            border: 2px solid #000;
-            margin: 20px;
-            border-radius: 10px;
-        }
-
-        .certificate-header img {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .certificate-content {
-            margin-top: 20px;
-        }
-
-        .details div {
-            margin: 10px 0;
-        }
-
-        .certificate-footer {
-            margin-top: 20px;
-            font-size: 0.9em;
-        }
-
-        .terms-conditions {
-            margin-top: 20px;
-        }
-
-        .terms-conditions h3 {
-            margin-bottom: 10px;
-        }
-
-        .specs-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        .specs-table th, .specs-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
-
-        .specs-table th {
-            background-color: #f2f2f2;
-        }
-    </style>
-</head>
-<body>
-    <div class="certificate">
-        <div class="certificate-header">
-            <img src="${warrantyImageSrc}" alt="${duration} Year Warranty">
-        </div>
-        <div class="certificate-content">
-            <p>This document certifies the warranty coverage for the product purchased from PATA Electric Company and serves as proof of your entitlement to warranty services. Please read this certificate carefully for important terms and conditions.</p>
-            <div class="details">
-               <div>
-                    <span>■ Product Model Number:</span> ${model}
-                </div>
-                <div>
-                    <span>■ Product Serial Number:</span> ${serialNumber}
-                </div>
-                <div>
-                    <span>■ Date of Purchase:</span> ${purchase_date}
-                </div>
-                <div>
-                    <span>■ Purchaser's Name:</span> ${name}
-                </div>
-                <div>
-                    <span>■ Seller's Name:</span> ${warranty.purchaseDetails}
-                </div>
-                <div>
-                    <span>■ Warranty Period:</span> ${duration} Years
-                </div>
-                <div>
-                    <span>■ Warranty Expiry:</span> ${expiryDate}
-                </div>
-                <div>
-                    <span>■ Certificate ID:</span> ${certificateID}
+            <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Warranty Certificate</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+            }
+    
+            .certificate {
+                border: 5px solid #C7A94F;
+                padding: 10px;
+                display: grid;
+                grid-template-rows: auto 1fr auto;
+                position: relative;
+            }
+    
+            .certificate:before {
+                content: "";
+                position: absolute;
+                top: 5px;
+                left: 5px;
+                right: 5px;
+                bottom: 5px;
+                border: 2px dotted #C7A94F;
+                pointer-events: none;
+            }
+    
+            .certificate-header {
+                display: grid;
+                grid-template-columns: 1fr;
+                align-items: center;
+                margin-bottom: 20px;
+                text-align: center;
+            }
+    
+            .certificate-header img {
+                width: 100%;
+                height: auto;
+            }
+    
+            .certificate-content {
+                margin-top: 20px;
+            }
+    
+            .certificate-content p {
+                font-size: 24px;
+                font-weight: 500;
+            }
+    
+            .details {
+                display: grid;
+                grid-template-columns: auto auto;
+                gap: 10px;
+                justify-content: center;
+                margin-top: 10px;
+                text-align: center;
+            }
+    
+            .details div {
+                margin-bottom: 10px;
+            }
+    
+            .details div span {
+                display: inline-block;
+                width: 250px;
+                font-size: 20px;
+            }
+    
+            .certificate-footer {
+                margin-top: 20px;
+                font-size: 24px;
+                width: 100%;
+            }
+    
+            .terms-conditions {
+                margin-top: 20px;
+                font-size: 18px;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="certificate">
+            <div class="certificate-header">
+                <img src="${warrantyImageSrc}" alt="${warranty.duration} Year Warranty">
+            </div>
+    
+            <div class="certificate-content">
+                <p>This document certifies the warranty coverage for the product purchased from PATA Electric Company and serves as proof of your entitlement to warranty services. Please read this certificate carefully for important terms and conditions.</p>
+                <div class="details">
+                   <div>
+                        <span>■ Product Model Number:</span> ${warranty.model}
+                    </div>
+                    <div>
+                        <span>■ Product Serial Number:</span> ${warranty.serialNumber}
+                    </div>
+                    <div>
+                        <span>■ Date of Purchase:</span> ${warranty.purchaseDate}
+                    </div>
+                    <div>
+                        <span>■ Purchaser's Name:</span> ${warranty.name}
+                    </div>
+                    <div>
+                        <span>■ Seller's Name:</span> ${warranty.purchaseDetails}
+                    </div>
+                    
+                    <div>
+                        <span>■ Warranty Expiry:</span> ${expiryDate}
+                    </div>
                 </div>
             </div>
-
-               <table class="specs-table">
-                <thead>
-                    <tr>
-                        <th>Specification</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${Object.entries(serialDetails._doc)
-                        .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'testedBy', 'uploadedFile', 'dynamicFields'].includes(key))
-                        .map(([key, value]) => `
-                            <tr>
-                                <td>${key}</td>
-                                <td>${value}</td>
-                            </tr>
-                        `).join('')}
-                    ${Array.from(serialDetails.dynamicFields || [])
-                        .map(([key, value]) => `
-                            <tr>
-                                <td>${key}</td>
-                                <td>${value}</td>
-                            </tr>
-                        `).join('')}
-                </tbody>
-            </table>
+    
+            <div class="certificate-footer">
+                <p>PATA Electric Company warrants that the product mentioned above is free from defects in material and workmanship under normal use during the warranty period. The warranty covers repairs or replacement of the product components, subject to the terms and conditions specified herein.</p>
+            </div>
+    
+            <div class="terms-conditions">
+                <h3>Terms and Conditions:</h3>
+                <p>■ Warranty Period: The warranty period commences on the date of purchase and lasts for the duration specified on this certificate.</p>
+                <p>■ Proof of Purchase: This certificate, along with the original purchase receipt, serves as proof of purchase and is required for warranty claims.</p>
+                <p>■ Scope of Warranty: The warranty covers defects in material and workmanship. It does not cover damages resulting from accidents, misuse, alterations, or unauthorized repairs.</p>
+                <p>■ Warranty Service: In the event of a covered defect, please contact our customer support at Toll-Free: 18003009PATA | support@bitboxpc.com to initiate a warranty claim.</p>
+            </div>
         </div>
-        <div class="certificate-footer">
-            <p>PATA Electric Company warrants that the product mentioned above is free from defects in material and workmanship under normal use during the warranty period. The warranty covers repairs or replacement of the product components, subject to the terms and conditions specified herein.</p>
-        </div>
-        <div class="terms-conditions">
-            <h3>Terms and Conditions:</h3>
-            <p>■ Warranty Period: The warranty period commences on the date of purchase and lasts for the duration specified on this certificate.</p>
-            <p>■ Proof of Purchase: This certificate, along with the original purchase receipt, serves as proof of purchase and is required for warranty claims.</p>
-            <p>■ Scope of Warranty: The warranty covers defects in material and workmanship. It does not cover damages resulting from accidents, misuse, alterations, or unauthorized repairs.</p>
-            <p>■ Warranty Service: In the event of a covered defect, please contact our customer support at Toll-Free: 18003009PATA | support@bitboxpc.com to initiate a warranty claim.</p>
-        </div>
-    </div>
-</body>
-</html>
-        `;
+    </body>
+    </html>
+            `;
     
     
             const pdfOptions = {
@@ -1329,12 +1319,12 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
                 async function sendMail() {
                     const info = await transporter.sendMail({
                         from: '"Bitbox Alerts" <alerts@bitboxpc.com>',
-                        to: `"Recipient" <${updatedWarrantyData.email}>`,
+                        to: `"Recipient" <${warranty.email}>`,
                         subject: "Warranty Verification Completed: Your Warranty is Attached",
                         text: `Dear Bitbox PC User,
-                        Your warranty for serial number ${updatedWarrantyData.serialNumber} has been verified.
-                        System Purchase Date: ${updatedWarrantyData.purchaseDate}
-                        Warranty End date: ${updatedWarrantyData.expiryDate.toString()}
+                        Your warranty for serial number ${warranty.serialNumber} has been verified.
+                        System Purchase Date: ${warranty.purchaseDate}
+                        Warranty End date: ${warranty.expiryDate.toString()}
                         Regards,
                         Team Support
                         BitBox`,
@@ -1344,7 +1334,7 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
                         <b>Details: <br>
                         Warranty Period: ${updatedWarrantyData.durationnew} Years <br>
                         Warranty Expiry: ${expiryDate} <br>
-                        <h2>Coverage Details: ${updatedWarrantyData.warrantyType} </h2>
+                        <h2>Coverage Details: ${warranty.warrantyType} </h2>
                         </b>
     
                         <br><br>If you have any questions about your warranty coverage or need further assistance, please feel free to contact our customer support team at support@bitboxpc.com<br><br>
@@ -1357,7 +1347,7 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
                         <img src='https://www.bitboxpc.com/wp-content/uploads/2024/04/BitBox_logo1.png' height="60" width="140">`,
                         attachments: [
                             {
-                                filename: `warranty-${updatedWarrantyData.serialNumber}.pdf`,
+                                filename: `warranty-${warranty.serialNumber}.pdf`,
                                 path: result.filename
                             }
                         ]
