@@ -116,10 +116,22 @@
                                 <input type="text" name="name" value="<%= warranty.name %>" required><br><br>
                                 <label>Email:</label>
                                 <input type="email" name="email" value="<%= warranty.email %>" required><br><br>
-                                <% if (!warranty.verify) { %>
-                                    <label>Purchase Date:</label>
-                                    <input type="date" name="purchaseDate" value="<%= warranty.purchaseDate.toISOString().split('T')[0] %>" required><br><br>
-                                <% } %>
+                                
+                                    <label>Purchase Date: ( <small style="color: red;">not editabel</small> )</label>
+                                    <input type="date" name="purchaseDate" value="<%= warranty.purchaseDate.toISOString().split('T')[0] %>" required readonly><br><br>
+
+                                    <%
+                                let duration = '';
+                                if (warranty.purchaseDate && warranty.expiryDate) {
+                                    const purchaseDate = new Date(warranty.purchaseDate);
+                                    const expiryDate = new Date(warranty.expiryDate);
+                                    const durationInYears = (expiryDate - purchaseDate) / (1000 * 60 * 60 * 24 * 365.25);
+                                    duration = Math.round(durationInYears * 10) / 10; // Round to 1 decimal place
+                                }
+                                %>
+                                <label>Duration (Years): ( <small style="color: red;">not editabel</small> )</label>
+                                <input type="number" name="duration" value="<%= duration %>" readonly><br><br>
+               
                                 <label>Address:</label>
                                 <input type="text" name="address" value="<%= warranty.address %>" required><br><br>
                                 <label>City:</label>

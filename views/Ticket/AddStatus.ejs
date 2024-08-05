@@ -169,39 +169,44 @@
         }
 
         function displayStatusOptions(statuses) {
-            const statusList = document.getElementById('status-list');
-            statusList.innerHTML = ''; // Clear existing list
+    const statusList = document.getElementById('status-list');
+    statusList.innerHTML = ''; // Clear existing list
 
-            statuses.forEach(status => {
-                const statusItem = document.createElement('div');
-                statusItem.className = 'status-item';
-                
-                const statusText = document.createElement('span');
-                statusText.textContent = status.status;
-                
-                const buttonsContainer = document.createElement('div');
-                buttonsContainer.className = 'status-buttons';
+    statuses.forEach(status => {
+        const statusItem = document.createElement('div');
+        statusItem.className = 'status-item';
+        
+        const statusText = document.createElement('span');
+        statusText.textContent = status.status;
+        
+        statusItem.appendChild(statusText);
 
-                const updateButton = document.createElement('button');
-                updateButton.className = 'update-button';
-                updateButton.textContent = 'Update';
-                updateButton.onclick = () => updateStatus(status._id);
+        // Only add update and delete buttons if status is not 'Submitted' or 'Resolved'
+        if (status.status !== 'submitted' && status.status !== 'Resolved') {
+            const buttonsContainer = document.createElement('div');
+            buttonsContainer.className = 'status-buttons';
 
-                const deleteButton = document.createElement('button');
-                deleteButton.className = 'delete-button';
-                deleteButton.textContent = 'Delete';
-                deleteButton.onclick = () => deleteStatus(status._id);
+            const updateButton = document.createElement('button');
+            updateButton.className = 'update-button';
+            updateButton.textContent = 'Update';
+            updateButton.onclick = () => updateStatus(status._id);
 
-                buttonsContainer.appendChild(updateButton);
-                buttonsContainer.appendChild(deleteButton);
-                
-                statusItem.appendChild(statusText);
-                statusItem.appendChild(buttonsContainer);
-                statusList.appendChild(statusItem);
-            });
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-button';
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = () => deleteStatus(status._id);
+
+            buttonsContainer.appendChild(updateButton);
+            buttonsContainer.appendChild(deleteButton);
+            
+            statusItem.appendChild(buttonsContainer);
         }
 
-        function updateStatus(id) {
+        statusList.appendChild(statusItem);
+    });
+}
+
+           function updateStatus(id) {
             const newStatus = prompt('Enter new status:');
             if (newStatus) {
                 fetch(`/api/ticketManagement/updateStatus/${id}`, {

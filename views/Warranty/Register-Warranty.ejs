@@ -212,6 +212,7 @@
     fetch('/api/warrantyManagement/warranty-options')
         .then(response => response.json())
         .then(options => {
+            warrantyOptionSelect.innerHTML = '<option value="" disabled selected>Select an option</option>';
             options.filter(option => option.type === warrantyType).forEach(option => {
                 const optionElement = document.createElement('option');
                 optionElement.value = option.value;

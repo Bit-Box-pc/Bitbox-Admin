@@ -58,7 +58,7 @@
     </style>
 </head>
 <body>
-    <nav style="display: flex; justify-content: space-between; align-items: center; padding: 1em; background-color: #333; color: white; width: 100%; position: fixed; top: 0; left: 0; z-index: 1000;">
+    <nav style="display: flex; justify-content: space-between; align-items: center; padding: 1em; background-color: lightgray; color: black; width: 100%; position: fixed; top: 0; left: 0; z-index: 1000;">
         <div class="logo" style="font-size: 1.5em;">
             <img src="/images/BitBox_logo1.png" alt="">
         </div>
@@ -139,8 +139,21 @@
                                 <input type="email" name="email" value="<%= group.commonFields.email %>" required><br><br>
                                 <label>Address:</label>
                                 <input type="text" name="address" value="<%= group.commonFields.address %>" required><br><br>
-                                <label>Purchase Date:</label>
-                                <input type="date" name="purchaseDate" value="<%= group.commonFields.purchaseDate.toString().split('T')[0] %>" required><br><br>
+                                <label>Purchase Date: ( <small style="color: red;">not editabel</small> )</label>
+                                <input type="date" name="purchaseDate" value="<%= group.commonFields.purchaseDate ? group.commonFields.purchaseDate.toISOString().slice(0,10) : '' %>" required readonly><br><br>
+                                
+                                <%
+                                let duration = '';
+                                if (group.commonFields.purchaseDate && group.commonFields.expiryDate) {
+                                    const purchaseDate = new Date(group.commonFields.purchaseDate);
+                                    const expiryDate = new Date(group.commonFields.expiryDate);
+                                    const durationInYears = (expiryDate - purchaseDate) / (1000 * 60 * 60 * 24 * 365.25);
+                                    duration = Math.round(durationInYears * 10) / 10; // Round to 1 decimal place
+                                }
+                                %>
+                                <label>Duration (Years): ( <small style="color: red;">not editabel</small> )</label>
+                                <input type="number" name="duration" value="<%= duration %>" readonly><br><br>
+                                <!--  -->
                                 <label>City:</label>
                                 <input type="text" name="city" value="<%= group.commonFields.city %>" required><br><br>
                                 <label>Pincode:</label>
@@ -280,7 +293,7 @@
         function submitUpdateForm(batchId) {
             const form = document.getElementById(`updateForm_${batchId}`);
             const formData = new FormData(form);
-            fetch(`/api/warrantyManagement/update-warranty/${batchId}`, {
+            fetch(`/api/warrantyManagement/update/${batchId}`, {
                 method: 'POST',
                 body: formData
             })
