@@ -1162,148 +1162,146 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
             const expiryDate = new Date(warranty.expiryDate).toDateString();
             console.log(warranty.serialNumber);
     
-            const serialDetails = await SerialNumber.findOne({ serialNumber: warranty.serialNumber });
+            const serialDetails = await SerialNumber.findOne({ serialNumber: updatedWarrantyData.serialNumber });
             console.log(serialDetails);
 
-        const pdfContent = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warranty Certificate</title>
-    <style>
-        /* CSS styles */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+            const pdfContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Warranty Certificate</title>
+        <style>
+            /* CSS styles */
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
-        .certificate {
-            padding: 20px;
-            border: 2px solid #000;
-            margin: 20px;
-            border-radius: 10px;
-        }
+            .certificate {
+                padding: 20px;
+                border: 2px solid #000;
+                margin: 20px;
+                border-radius: 10px;
+            }
 
-        .certificate-header img {
-            max-width: 100%;
-            height: auto;
-        }
+            .certificate-header img {
+                max-width: 100%;
+                height: auto;
+            }
 
-        .certificate-content {
-            margin-top: 20px;
-        }
+            .certificate-content {
+                margin-top: 20px;
+            }
 
-        .details div {
-            margin: 10px 0;
-        }
+            .details div {
+                margin: 10px 0;
+            }
 
-        .certificate-footer {
-            margin-top: 20px;
-            font-size: 0.9em;
-        }
+            .certificate-footer {
+                margin-top: 20px;
+                font-size: 0.9em;
+            }
 
-        .terms-conditions {
-            margin-top: 20px;
-        }
+            .terms-conditions {
+                margin-top: 20px;
+            }
 
-        .terms-conditions h3 {
-            margin-bottom: 10px;
-        }
+            .terms-conditions h3 {
+                margin-bottom: 10px;
+            }
 
-        .specs-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
+            .specs-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
 
-        .specs-table th, .specs-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-        }
+            .specs-table th, .specs-table td {
+                border: 1px solid #ddd;
+                padding: 8px;
+            }
 
-        .specs-table th {
-            background-color: #f2f2f2;
-        }
-    </style>
-</head>
-<body>
-    <div class="certificate">
-        <div class="certificate-header">
-            <img src="${warrantyImageSrc}" alt="${duration} Year Warranty">
-        </div>
-        <div class="certificate-content">
-            <p>This document certifies the warranty coverage for the product purchased from PATA Electric Company and serves as proof of your entitlement to warranty services. Please read this certificate carefully for important terms and conditions.</p>
-            <div class="details">
-               <div>
-                    <span>■ Product Model Number:</span> ${warranty.model}
-                </div>
-                <div>
-                    <span>■ Product Serial Number:</span> ${warranty.serialNumber}
-                </div>
-                <div>
-                    <span>■ Date of Purchase:</span> ${warranty.purchaseDate}
-                </div>
-                <div>
-                    <span>■ Purchaser's Name:</span> ${warranty.name}
-                </div>
-                <div>
-                    <span>■ Seller's Name:</span> ${warranty.purchaseDetails}
-                </div>
-                <div>
-                    <span>■ Warranty Period:</span> ${warranty.duration} Years
-                </div>
-                <div>
-                    <span>■ Warranty Expiry:</span> ${warranty.expiryDate}
-                </div>
-                <div>
-                    <span>■ Certificate ID:</span> ${warranty.certificateID}
-                </div>
+            .specs-table th {
+                background-color: #f2f2f2;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="certificate">
+            <div class="certificate-header">
+                <img src="${warrantyImageSrc}" alt="${duration} Year Warranty">
             </div>
+            <div class="certificate-content">
+                <p>This document certifies the warranty coverage for the product purchased from PATA Electric Company and serves as proof of your entitlement to warranty services. Please read this certificate carefully for important terms and conditions.</p>
+                <div class="details">
+                <div>
+                        <span>■ Product Model Number:</span> ${warranty.model}
+                    </div>
+                    <div>
+                        <span>■ Product Serial Number:</span> ${warranty.serialNumber}
+                    </div>
+                    <div>
+                        <span>■ Date of Purchase:</span> ${warranty.purchaseDate}
+                    </div>
+                    <div>
+                        <span>■ Purchaser's Name:</span> ${warranty.name}
+                    </div>
+                    <div>
+                        <span>■ Seller's Name:</span> ${warranty.purchaseDetails}
+                    </div>
+                
+                    <div>
+                        <span>■ Warranty Expiry:</span> ${warranty.expiryDate}
+                    </div>
+                    <div>
+                        <span>■ Certificate ID:</span> ${warranty.certificateID}
+                    </div>
+                </div>
 
-               <table class="specs-table">
-                <thead>
-                    <tr>
-                        <th>Specification</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${Object.entries(serialDetails._doc)
-                        .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'testedBy', 'uploadedFile', 'dynamicFields'].includes(key))
-                        .map(([key, value]) => `
-                            <tr>
-                                <td>${key}</td>
-                                <td>${value}</td>
-                            </tr>
-                        `).join('')}
-                    ${Array.from(serialDetails.dynamicFields || [])
-                        .map(([key, value]) => `
-                            <tr>
-                                <td>${key}</td>
-                                <td>${value}</td>
-                            </tr>
-                        `).join('')}
-                </tbody>
-            </table>
+                <table class="specs-table">
+                    <thead>
+                        <tr>
+                            <th>Specification</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(serialDetails._doc)
+                            .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'testedBy', 'uploadedFile', 'dynamicFields'].includes(key))
+                            .map(([key, value]) => `
+                                <tr>
+                                    <td>${key}</td>
+                                    <td>${value}</td>
+                                </tr>
+                            `).join('')}
+                        ${Array.from(serialDetails.dynamicFields || [])
+                            .map(([key, value]) => `
+                                <tr>
+                                    <td>${key}</td>
+                                    <td>${value}</td>
+                                </tr>
+                            `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="certificate-footer">
+                <p>PATA Electric Company warrants that the product mentioned above is free from defects in material and workmanship under normal use during the warranty period. The warranty covers repairs or replacement of the product components, subject to the terms and conditions specified herein.</p>
+            </div>
+            <div class="terms-conditions">
+                <h3>Terms and Conditions:</h3>
+                <p>■ Warranty Period: The warranty period commences on the date of purchase and lasts for the duration specified on this certificate.</p>
+                <p>■ Proof of Purchase: This certificate, along with the original purchase receipt, serves as proof of purchase and is required for warranty claims.</p>
+                <p>■ Scope of Warranty: The warranty covers defects in material and workmanship. It does not cover damages resulting from accidents, misuse, alterations, or unauthorized repairs.</p>
+                <p>■ Warranty Service: In the event of a covered defect, please contact our customer support at Toll-Free: 18003009PATA | support@bitboxpc.com to initiate a warranty claim.</p>
+            </div>
         </div>
-        <div class="certificate-footer">
-            <p>PATA Electric Company warrants that the product mentioned above is free from defects in material and workmanship under normal use during the warranty period. The warranty covers repairs or replacement of the product components, subject to the terms and conditions specified herein.</p>
-        </div>
-        <div class="terms-conditions">
-            <h3>Terms and Conditions:</h3>
-            <p>■ Warranty Period: The warranty period commences on the date of purchase and lasts for the duration specified on this certificate.</p>
-            <p>■ Proof of Purchase: This certificate, along with the original purchase receipt, serves as proof of purchase and is required for warranty claims.</p>
-            <p>■ Scope of Warranty: The warranty covers defects in material and workmanship. It does not cover damages resulting from accidents, misuse, alterations, or unauthorized repairs.</p>
-            <p>■ Warranty Service: In the event of a covered defect, please contact our customer support at Toll-Free: 18003009PATA | support@bitboxpc.com to initiate a warranty claim.</p>
-        </div>
-    </div>
-</body>
-</html>
-        `;
+    </body>
+    </html>
+            `;
     
     
             const pdfOptions = {
