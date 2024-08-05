@@ -97,7 +97,7 @@ router.get('/open-ticket', async (req, res) => {
     try {
         const loggedIN = true;
         const { username, accessTo } = req.session.user;
-        const tickets = await WarrantyClaim.find({ status: { $ne: 'Resolved' } });
+        const tickets = await WarrantyClaim.find({ status: { $ne: 'Resolved ' } });
         res.render('Ticket/OpenTicket', { loggedIN, accessTo, tickets });
     } catch (error) {
         console.error('Error fetching tickets:', error);
@@ -109,7 +109,7 @@ router.get('/closed-ticket', async (req, res) => {
     try {
         const loggedIN = true;
         const { username, accessTo } = req.session.user;
-        const tickets = await WarrantyClaim.find({ status: 'Resolved' });
+        const tickets = await WarrantyClaim.find({ status: 'Resolved ' });
         res.render('Ticket/ClosedTickets', { loggedIN, accessTo, tickets });
     } catch (error) {
         console.error('Error fetching tickets:', error);
@@ -273,8 +273,8 @@ router.get('/search/:query', async (req, res) => {
 });
 
 
-// Update ticket status
-// Route to update the status of a warranty claim and send an email notification
+//Update ticket status
+//Route to update the status of a warranty claim and send an email notification
 router.post('/updateStatus/:id', async (req, res) => {
     try {
         const { status } = req.body;
@@ -323,7 +323,7 @@ router.post('/updateStatus/:id', async (req, res) => {
     }
 });
 
-// Update a status by ID
+//Update a status by ID
 router.put('/updateStatus/:id', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
@@ -341,7 +341,7 @@ router.put('/updateStatus/:id', async (req, res) => {
     }
 });
 
-// Delete a status by ID
+//Delete a status by ID
 router.delete('/deleteStatus/:id', async (req, res) => {
     const { id } = req.params;
 
