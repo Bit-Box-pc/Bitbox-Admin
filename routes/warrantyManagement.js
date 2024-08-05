@@ -1168,73 +1168,73 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
 
             const pdfContent = `
             <!DOCTYPE html>
-            <html lang="en">
-            <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Warranty Certificate</title>
-        <style>
-            /* CSS styles */
-            body {
-                font-family: Arial, sans-serif;
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
+        <html lang="en">
+        <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warranty Certificate</title>
+    <style>
+        /* CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-            .certificate {
-                padding: 20px;
-                border: 2px solid #000;
-                margin: 20px;
-                border-radius: 10px;
-            }
+        .certificate {
+            padding: 20px;
+            border: 2px solid #000;
+            margin: 20px;
+            border-radius: 10px;
+        }
 
-            .certificate-header img {
-                max-width: 100%;
-                height: auto;
-            }
+        .certificate-header img {
+            max-width: 100%;
+            height: auto;
+        }
 
-            .certificate-content {
-                margin-top: 20px;
-            }
+        .certificate-content {
+            margin-top: 20px;
+        }
 
-            .details div {
-                margin: 10px 0;
-            }
+        .details div {
+            margin: 10px 0;
+        }
 
-            .certificate-footer {
-                margin-top: 20px;
-                font-size: 0.9em;
-            }
+        .certificate-footer {
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
 
-            .terms-conditions {
-                margin-top: 20px;
-            }
+        .terms-conditions {
+            margin-top: 20px;
+        }
 
-            .terms-conditions h3 {
-                margin-bottom: 10px;
-            }
+        .terms-conditions h3 {
+            margin-bottom: 10px;
+        }
 
-            .specs-table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 20px;
-            }
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
 
-            .specs-table th, .specs-table td {
-                border: 1px solid #ddd;
-                padding: 8px;
-            }
+        .specs-table th, .specs-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
 
-            .specs-table th {
-                background-color: #f2f2f2;
-            }
-        </style>
+        .specs-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
     </head>
     <body>
         <div class="certificate">
             <div class="certificate-header">
-                <img src="${warrantyImageSrc}" alt="${duration} Year Warranty">
+                <img src="${warrantyImageSrc}" style="width:100%">
             </div>
             <div class="certificate-content">
                 <p>This document certifies the warranty coverage for the product purchased from PATA Electric Company and serves as proof of your entitlement to warranty services. Please read this certificate carefully for important terms and conditions.</p>
@@ -1290,7 +1290,7 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
                 </table>
             </div>
             <div class="certificate-footer">
-                <p>PATA Electric Company warrants that the product mentioned above is free from defects in material and workmanship under normal use during the warranty period. The warranty covers repairs or replacement of the product components, subject to the terms and conditions specified herein.</p>
+                <p>PATA Electric Company warrants that the product mentioned above is free from defects in material and workmanship under normal use during the warranty period.<br> The warranty covers repairs or replacement of the product components, subject to the terms and conditions specified herein.</p>
             </div>
             <div class="terms-conditions">
                 <h3>Terms and Conditions:</h3>
