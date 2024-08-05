@@ -1329,12 +1329,12 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
                 async function sendMail() {
                     const info = await transporter.sendMail({
                         from: '"Bitbox Alerts" <alerts@bitboxpc.com>',
-                        to: `"Recipient" <${warranty.email}>`,
+                        to: `"Recipient" <${updatedWarrantyData.email}>`,
                         subject: "Warranty Verification Completed: Your Warranty is Attached",
                         text: `Dear Bitbox PC User,
-                        Your warranty for serial number ${warranty.serialNumber} has been verified.
-                        System Purchase Date: ${warranty.purchaseDate}
-                        Warranty End date: ${warranty.expiryDate.toString()}
+                        Your warranty for serial number ${updatedWarrantyData.serialNumber} has been verified.
+                        System Purchase Date: ${updatedWarrantyData.purchaseDate}
+                        Warranty End date: ${updatedWarrantyData.expiryDate.toString()}
                         Regards,
                         Team Support
                         BitBox`,
@@ -1344,7 +1344,7 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
                         <b>Details: <br>
                         Warranty Period: ${updatedWarrantyData.durationnew} Years <br>
                         Warranty Expiry: ${expiryDate} <br>
-                        <h2>Coverage Details: ${warranty.warrantyType} </h2>
+                        <h2>Coverage Details: ${updatedWarrantyData.warrantyType} </h2>
                         </b>
     
                         <br><br>If you have any questions about your warranty coverage or need further assistance, please feel free to contact our customer support team at support@bitboxpc.com<br><br>
@@ -1357,7 +1357,7 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
                         <img src='https://www.bitboxpc.com/wp-content/uploads/2024/04/BitBox_logo1.png' height="60" width="140">`,
                         attachments: [
                             {
-                                filename: `warranty-${warranty.serialNumber}.pdf`,
+                                filename: `warranty-${updatedWarrantyData.serialNumber}.pdf`,
                                 path: result.filename
                             }
                         ]
