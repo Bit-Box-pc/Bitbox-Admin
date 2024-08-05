@@ -445,119 +445,7 @@ router.post('/Register-Warranty', upload.single('billPdf'), async (req, res) => 
     }
 });
 
-// router.post('/Register-Warranty', upload.single('billPdf'), async (req, res) => {
-//     const { numComputers, expiryyear, name, email, purchaseDate, address, city, pincode, state, phoneNumber, purchaseMedium, company, reseller, warrantyType, selectedWarrantyOption } = req.body;
-//     const warranties = [];
-//     const expiryDate = expiryyear;
-//     const billPdfPath = req.file.path;
-//     console.log(selectedWarrantyOption);
 
-//     let constant = null;
-//     if (numComputers > 1) {
-//         constant = Math.floor(10000000 + Math.random() * 90000000);
-//     }
-
-
-
-//     const purchaseDetails = purchaseMedium === 'direct' ? company : reseller;
-
-//     for (let i = 1; i <= numComputers; i++) {
-//         const serialNumber = req.body[`serialNumber${i}`];
-//         const model = req.body[`model${i}`];
-
-//         warranties.push({
-//             expiryDate,
-//             name,
-//             email,
-//             purchaseDate,
-//             address,
-//             city,
-//             pincode,
-//             state,
-//             phoneNumber,
-//             serialNumber,
-//             model,
-//             billPdf: billPdfPath,
-//             batch: constant,
-//             purchaseDetails,
-//             warrantyType: selectedWarrantyOption // Adding the new field to the warranty object
-//         });
-//     }
-
-//     try {
-//         const existingWarranties = await Warranty.find({
-//             serialNumber: { $in: warranties.map(warranty => warranty.serialNumber) }
-//         });
-
-//         const existingSerialNumbers = existingWarranties.map(warranty => warranty.serialNumber);
-//         const newWarranties = warranties.filter(warranty => !existingSerialNumbers.includes(warranty.serialNumber));
-//         const duplicateWarranties = warranties.filter(warranty => existingSerialNumbers.includes(warranty.serialNumber));
-
-//         const response = {
-//             success: newWarranties.map(warranty => warranty.serialNumber),
-//             duplicate: duplicateWarranties.map(warranty => warranty.serialNumber)
-//         };
-
-//         if (duplicateWarranties.length > 0) {
-//             res.status(201).send(`This Device ${response.duplicate.join(', ')} is already registered, please connect with our customer care at support@bitboxpc.com`);
-//         }
-
-//         await Warranty.insertMany(newWarranties);
-
-//         // Send email with PDF attachment
-//         async function sendMail(to, subject, text, html) {
-//             const info = await transporter.sendMail({
-//                 from: '"Bitbox Alerts" <alerts@bitboxpc.com>',
-//                 to,
-//                 subject,
-//                 text,
-//                 html,
-//             });
-
-//             console.log('Message sent: %s', info.messageId);
-//         }
-
-//         await sendMail(
-//             `"Recipient" <${email}>`,
-//             "Warranty Registration Submitted and Pending for Verification",
-//             `Dear Bitbox PC User,
-//             Your warranty registration has been successfully completed. We will verify the details and notify you as soon as possible.
-            
-//             Regards,
-//             Team Support
-//             BitBox`,
-//             `Dear Customer, <br>
-//             <b>Thank you for submitting your warranty registration form. We have successfully received your details and will now proceed with verification. Rest assured, our team will carefully review your submission. <br>
-//             We appreciate your patience during this process. You will receive an update from us shortly regarding the status of your warranty registration. <br>
-//             If you have any urgent inquiries or require further assistance, please feel free to reach out to our customer support team at support@bitboxpc.com  </b>
-//             <br><br>
-//             Best Regards,<br>
-//             Team Bitbox
-//             <br><br>
-//             Toll Free: 1800309PATA <br>
-//             eMail: <a href="">support@bitboxpc.com </a> <br>
-//             web: <a href=" www.bitboxpc.com"> www.bitboxpc.com </a> <br><br>
-//             <img src='https://www.bitboxpc.com/wp-content/uploads/2024/04/BitBox_logo1.png' height="60" width="140"></img>`
-//         );
-
-//         let alertMessage = `New warranty registration request received with the following serial numbers: ${response.success.join(', ')}`;
-//         if (constant) {
-//             alertMessage += `\nBatch ID: ${constant}`;
-//         }
-
-//         await sendMail(
-//             '"Alerts" <alerts@bitboxpc.com>',
-//             "New Warranty Registration Request",
-//             alertMessage,
-//             alertMessage.replace(/\n/g, '<br>')
-//         );
-
-//         res.status(201).send('Warranty Request Submitted Successfully');
-//     } catch (error) {
-//         console.error('Error SUBMITTING warranties:', error);
-//         res.status(500).send('Error verifying warranties');
-//     }
-// });
 //Verify Warrenty
 router.post('/verify-warranty', async (req, res) => {
     const { serialNumber, purchaseDate, email, duration, name, address, city, phoneNumber, model, billPdf, warrantyType } = req.body;
@@ -692,9 +580,7 @@ router.post('/verify-warranty', async (req, res) => {
                 <div>
                     <span>■ Warranty Expiry:</span> ${expiryDate}
                 </div>
-                <div>
-                    <span>■ Certificate ID:</span> ${certificateID}
-                </div>
+               
             </div>
 
                <table class="specs-table">
@@ -956,7 +842,7 @@ router.post('/bulk-warranty-verify', async (req, res) => {
             <img src="${warrantyImageSrc}" alt="${duration} Year Warranty">
         </div>
 
-        <th>Certificate ID : ${certificateID}</th>
+        
 
         <div class="certificate-content">
             <p>This document certifies the warranty coverage for the product purchased from PATA Electric Company and serves as proof of your entitlement to warranty services. Please read this certificate carefully for important terms and conditions.</p>
@@ -1095,8 +981,6 @@ router.post('/bulk-warranty-verify', async (req, res) => {
         res.status(500).send('Error verifying warranties');
     }
 });
-
-
 // Route to add a new reseller
 router.post('/add-reseller', async (req, res) => {
     const { name, email, phone, city } = req.body; // Extract name, email, phone, and city from req.body
@@ -1129,7 +1013,6 @@ router.delete('/delete-reseller/:id', async (req, res) => {
         res.status(500).send('Error deleting reseller');
     }
 });
-
 router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req, res) => {
     const warrantyId = req.params.warrantyId;
     const updatedWarrantyData = req.body;

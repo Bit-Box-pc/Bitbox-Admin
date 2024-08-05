@@ -171,8 +171,8 @@ router.get('/statusOptions', async (req, res) => {
 
 router.post('/ticketsAdd', async (req, res) => {
     try {
-        const { certificateId, phoneNumber, emailId, serialNumber, message } = req.body;
-
+        const {phoneNumber, emailId, serialNumber, message } = req.body;
+        const certificateId = 'XXXXXXX';
         // Check if the certificate exists
         const certificateExists = await Certificate.exists({ serialNumber });
         console.log(certificateExists);
