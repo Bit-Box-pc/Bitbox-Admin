@@ -207,10 +207,10 @@ router.post('/ticketsAdd', async (req, res) => {
                 const info = await transporter.sendMail({
                     from: '"Bitbox Alerts" <alerts@bitboxpc.com>',
                     to: `"Recipient" <${emailId}>`,
-                    subject: "Warranty Claim Submitted",
+                    subject: "Issue Submitted Sucessfully",
                     text: `Dear Bitbox PC User,
 
-Your Warranty Claim for Serial Number ${serialNumber} with Reference to Certificate ID ${certificateId} has been submitted successfully. We'll convey further updates to your email.
+Your Issue for Serial Number ${serialNumber}  has been submitted successfully. We'll convey further updates to your email.
 
 If you have any questions about your warranty coverage or need further assistance, please feel free to contact our customer support team at support@bitboxpc.com.
 
