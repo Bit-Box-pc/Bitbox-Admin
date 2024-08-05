@@ -1161,7 +1161,7 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
             const warrantyImageSrc = getWarrantyImage(updatedWarrantyData.durationnew);
             const expiryDate = new Date(warranty.expiryDate).toDateString();
     
-            const serialDetails = await SerialNumber.findOne({ serialNumber: serialNumber });
+            const serialDetails = await SerialNumber.findOne({ serialNumber: warranty.serialNumber });
 
         const pdfContent = `
         <!DOCTYPE html>
@@ -1243,7 +1243,7 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
                     <span>■ Product Serial Number:</span> ${warranty.serialNumber}
                 </div>
                 <div>
-                    <span>■ Date of Purchase:</span> ${warranty.purchase_date}
+                    <span>■ Date of Purchase:</span> ${warranty.purchaseDate}
                 </div>
                 <div>
                     <span>■ Purchaser's Name:</span> ${warranty.name}
