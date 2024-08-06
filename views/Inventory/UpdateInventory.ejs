@@ -282,7 +282,7 @@
                                 <input type="text" id="updateModelNumber" name="modelNumber">
                                 
                                 <label for="updateTestedBy">Tester:</label>
-                                <select id="updateTestedBy" name="testedBy" required>
+                                <select id="updateTestedBy" name="testedBy" >
                                     <% testers.forEach(tester => { %>
                                         <option value="<%= tester._id %>"><%= tester.name %></option>
                                     <% }) %>
@@ -335,16 +335,16 @@
                                 <input type="text" id="updateMonitorSize" name="monitorSize">
                                 
                                 <label for="updateOperatingSystem">Operating System:</label>
-                                <input type="text" id="updateOperatingSystem" name="operatingSystem" required>
+                                <input type="text" id="updateOperatingSystem" name="operatingSystem">
                                 
                                 <label for="updateKeyboardMouseCombo">Keyboard Mouse Combo:</label>
-                                <input type="text" id="updateKeyboardMouseCombo" name="keyboardMouseCombo" required>
+                                <input type="text" id="updateKeyboardMouseCombo" name="keyboardMouseCombo" >
                                 
                                 <label for="updateSoftwareApp">Software / APP:</label>
-                                <input type="text" id="updateSoftwareApp" name="SoftwareApp" required>
+                                <input type="text" id="updateSoftwareApp" name="SoftwareApp">
                                 
                                 <label for="updateAddOn">Add-On:</label>
-                                <input type="text" id="updateAddOn" name="AddOn" required>
+                                <input type="text" id="updateAddOn" name="AddOn">
                                 
                                 
                                 
