@@ -99,6 +99,13 @@
                   
 
                     <strong>Bill:</strong><a href="http://admin.bitboxpc.com/<%= warranty.billPdf %>" target="_blank"><%= warranty.billPdf %></a><br>
+                    <strong>Certificate:</strong>
+                    <% if (warranty.certificateLink) { %>
+                        <a href="http://admin.bitboxpc.com/<%= warranty.certificateLink %>" target="_blank">View Certificate</a>
+                    <% } else { %>
+                        No certificate available
+                    <% } %>
+                    <br>
                     
                     <!-- Update Button -->
                     <button onclick="openUpdateModal('<%= warranty._id %>')">Update</button>

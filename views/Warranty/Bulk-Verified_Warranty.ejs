@@ -110,6 +110,7 @@
                             <tr>
                                 <th>Serial Number</th>
                                 <th>Model</th>
+                                <th>Certificate</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -117,6 +118,13 @@
                                 <tr>
                                     <td><%= item.serialNumber %></td>
                                     <td><%= item.model %></td>
+                                    <td>
+                                        <% if (item.certificateLink) { %>
+                                            <a href="http://admin.bitboxpc.com/<%= item.certificateLink %>" target="_blank">View Certificate</a>
+                                        <% } else { %>
+                                            No certificate available
+                                        <% } %>
+                                    </td>
                                 </tr>
                             <% }); %>
                         </tbody>

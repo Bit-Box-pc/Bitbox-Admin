@@ -232,7 +232,7 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
                         <tr>
                             <td>${entry.model}</td>
                             <td>${entry.serialNumber}</td>
-                            <td>${updateData.purchase_date}</td>
+                            <td>${entry.purchaseDate}</td>
                             <td>${entry.name}</td>
                             <td>${entry.purchaseDetails}</td>
                             <td>${formatDate(entry.expiryDate)}</td>
@@ -358,9 +358,6 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
         res.status(500).json({ success: false, error: 'Server Error' });
     }
 });
-
-
-
 router.get('/', (req, res) => {
     const loggedIN = true;
     const { username, accessTo } = req.session.user;
@@ -528,15 +525,28 @@ router.get('/singel-Verified_Warranty', async (req, res) => {
     const currentPage = parseInt(req.query.page) || 1;
 
     try {
-        const totalWarranties = await Warranty.countDocuments({ batch: null, verify: false });
+        const totalWarranties = await Warranty.countDocuments({ batch: null, verify: true });
         const totalPages = Math.ceil(totalWarranties / itemsPerPage);
 
         const warranties = await Warranty.find({ batch: null, verify: true })
             .skip((currentPage - 1) * itemsPerPage)
             .limit(itemsPerPage);
 
+        // Fetch certificates for all warranties
+        const serialNumbers = warranties.map(w => w.serialNumber);
+        const certificates = await Certificate.find({ serialNumber: { $in: serialNumbers } });
+
+        // Create a map of serialNumber to certificate
+        const certificateMap = new Map(certificates.map(c => [c.serialNumber, c.certificateLink]));
+
+        // Add certificate information to each warranty
+        const warrantiesWithCertificates = warranties.map(warranty => ({
+            ...warranty.toObject(),
+            certificateLink: certificateMap.get(warranty.serialNumber) || null
+        }));
+
         res.render('Warranty/Singel-Verified_Warranty', { 
-            warranties,
+            warranties: warrantiesWithCertificates,
             loggedIN,
             itemsPerPage,
             currentPage,
@@ -575,10 +585,31 @@ router.get('/bulk-Verified_Warranty', async (req, res) => {
             }
         ]);
 
-        const totalCount = await Warranty.countDocuments({ batch: { $ne: null } });
-        const totalPages = Math.ceil(totalCount);
+        // Fetch certificates for all serial numbers
+        const allSerialNumbers = groupedWarranties.flatMap(group => 
+            group.serialAndModel.map(item => item.serialNumber)
+        );
+        const certificates = await Certificate.find({ serialNumber: { $in: allSerialNumbers } });
 
-        res.render('Warranty/Bulk-Verified_Warranty', { groupedWarranties, loggedIN, totalPages, currentPage: page });
+        // Create a map of serialNumber to certificateLink
+        const certificateMap = new Map(certificates.map(c => [c.serialNumber, c.certificateLink]));
+
+        // Add certificate links to each serial number
+        groupedWarranties.forEach(group => {
+            group.serialAndModel.forEach(item => {
+                item.certificateLink = certificateMap.get(item.serialNumber) || null;
+            });
+        });
+
+        const totalCount = await Warranty.countDocuments({ batch: { $ne: null } });
+        const totalPages = Math.ceil(totalCount / limit);
+
+        res.render('Warranty/Bulk-Verified_Warranty', { 
+            groupedWarranties, 
+            loggedIN, 
+            totalPages, 
+            currentPage: page 
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send('Internal Server Error');
