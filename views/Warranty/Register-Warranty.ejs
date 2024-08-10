@@ -5,6 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Warranty</title>
     <link rel="stylesheet" href="/css/Register-Warranty.css">
+    <style>
+        #resellerSearch {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    
+        #resellerResults {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    
+        .reseller-item {
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+    
+        .reseller-item:hover {
+            background-color: #f0f0f0;
+        }
+    
+        .no-results {
+            padding: 10px;
+            color: #666;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
 
@@ -155,54 +187,104 @@
         }
     
         function togglePurchaseMedium() {
-            const purchaseMedium = document.querySelector('input[name="purchaseMedium"]:checked').value;
-            const purchaseDetailsDiv = document.getElementById('purchaseDetails');
-            purchaseDetailsDiv.innerHTML = '';
-    
-            if (purchaseMedium === 'direct') {
-                const companyLabel = document.createElement('label');
-                companyLabel.textContent = 'Company:';
-                const companyInput = document.createElement('input');
-                companyInput.type = 'text';
-                companyInput.name = 'company';
-                companyInput.value = 'PATA ELECTRIC COMPANY';
-                companyInput.readOnly = true;
-    
-                purchaseDetailsDiv.appendChild(companyLabel);
-                purchaseDetailsDiv.appendChild(companyInput);
-            } else if (purchaseMedium === 'reseller') {
-                const resellerLabel = document.createElement('label');
-                resellerLabel.textContent = 'Select Reseller:';
-                const resellerSelect = document.createElement('select');
-                resellerSelect.name = 'reseller';
-    
-                // Fetch reseller options from the server
-                fetch('/api/warrantyManagement/resellers')
-                    .then(response => response.json())
-                    .then(data => {
-                        // Clear any existing options
-                        resellerSelect.innerHTML = '';
-    
-                        // Ensure data is an array
-                        if (Array.isArray(data)) {
-                            data.forEach(reseller => {
-                                const option = document.createElement('option');
-                                option.value = reseller.companyName;  // Adjust according to your actual data fields
-                                option.textContent = reseller.companyName;  // Adjust according to your actual data fields
-                                resellerSelect.appendChild(option);
-                            });
-                        } else {
-                            console.error('Unexpected response format:', data);
-                        }
-                    })
-                    .catch(error => console.error('Error fetching resellers:', error));
-    
-                purchaseDetailsDiv.appendChild(resellerLabel);
-                purchaseDetailsDiv.appendChild(resellerSelect);
+    const purchaseMedium = document.querySelector('input[name="purchaseMedium"]:checked').value;
+    const purchaseDetailsDiv = document.getElementById('purchaseDetails');
+    purchaseDetailsDiv.innerHTML = '';
+
+    if (purchaseMedium === 'direct') {
+        const companyLabel = document.createElement('label');
+        companyLabel.textContent = 'Company:';
+        const companyInput = document.createElement('input');
+        companyInput.type = 'text';
+        companyInput.name = 'company';
+        companyInput.value = 'PATA ELECTRIC COMPANY';
+        companyInput.readOnly = true;
+
+        purchaseDetailsDiv.appendChild(companyLabel);
+        purchaseDetailsDiv.appendChild(companyInput);
+    } if (purchaseMedium === 'reseller') {
+        const resellerLabel = document.createElement('label');
+        resellerLabel.textContent = 'Search Reseller:';
+        const resellerInput = document.createElement('input');
+        resellerInput.type = 'text';
+        resellerInput.name = 'reseller';
+        resellerInput.id = 'resellerSearch';
+        resellerInput.placeholder = 'Type to search...';
+
+        const resellerResults = document.createElement('div');
+        resellerResults.id = 'resellerResults';
+        resellerResults.style.display = 'none';
+
+        purchaseDetailsDiv.appendChild(resellerLabel);
+        purchaseDetailsDiv.appendChild(resellerInput);
+        purchaseDetailsDiv.appendChild(resellerResults);
+
+        resellerInput.addEventListener('input', debounce(() => {
+            searchResellers();
+            resellerResults.style.display = 'block';
+        }, 300));
+
+        // Hide results when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!resellerInput.contains(event.target) && !resellerResults.contains(event.target)) {
+                resellerResults.style.display = 'none';
             }
-        }
+        });
+    }
+}
+
+function debounce(func, delay) {
+    let debounceTimer;
+    return function() {
+        const context = this;
+        const args = arguments;
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => func.apply(context, args), delay);
+    }
+}
+
+function searchResellers() {
+    const searchTerm = document.getElementById('resellerSearch').value;
+    const resultsDiv = document.getElementById('resellerResults');
+    resultsDiv.innerHTML = '';
+
+    if (searchTerm.length >= 3) {
+        fetch(`/api/warrantyManagement/resellers?search=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                    data.forEach(reseller => {
+                        const resellerDiv = document.createElement('div');
+                        resellerDiv.className = 'reseller-item';
+                        resellerDiv.textContent = reseller.companyName;
+                        resellerDiv.onclick = () => selectReseller(reseller.companyName);
+                        resultsDiv.appendChild(resellerDiv);
+                    });
+                } else {
+                    const noResults = document.createElement('div');
+                    noResults.className = 'no-results';
+                    noResults.textContent = 'No results found';
+                    resultsDiv.appendChild(noResults);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching resellers:', error);
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'no-results';
+                errorDiv.textContent = 'Error fetching results';
+                resultsDiv.appendChild(errorDiv);
+            });
+    } else {
+        resultsDiv.style.display = 'none';
+    }
+}
+
+function selectReseller(companyName) {
+    document.getElementById('resellerSearch').value = companyName;
+    document.getElementById('resellerResults').style.display = 'none';
+}
     
-        function toggleWarrantyOptions() {
+function toggleWarrantyOptions() {
     const warrantyType = document.querySelector('input[name="warrantyType"]:checked').value;
     const warrantyOptionSelect = document.getElementById('warrantyOptionSelect');
     const selectedWarrantyOption = document.getElementById('selectedWarrantyOption');

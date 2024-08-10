@@ -586,9 +586,15 @@ router.get('/bulk-Verified_Warranty', async (req, res) => {
 });
 router.get('/resellers', async (req, res) => {
     try {
-        const reseller = await Reseller.find();
-        console.log(reseller);
-        res.json(reseller);
+        const searchTerm = req.query.search;
+        let query = {};
+        
+        if (searchTerm && searchTerm.length >= 3) {
+            query = { companyName: { $regex: searchTerm, $options: 'i' } };
+        }
+
+        const resellers = await Reseller.find(query).limit(10);
+        res.json(resellers);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -601,8 +607,6 @@ router.get('/warranty-options', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
-
 router.post('/Register-Warranty', upload.single('billPdf'), async (req, res) => {
     const { numComputers, expiryyear, name, email, purchaseDate, address, city, pincode, state, phoneNumber, purchaseMedium, company, reseller, warrantyType, selectedWarrantyOption } = req.body;
     const warranties = [];
@@ -720,8 +724,6 @@ router.post('/Register-Warranty', upload.single('billPdf'), async (req, res) => 
         res.status(500).send('Error verifying warranties');
     }
 });
-
-
 //Verify Warrenty
 router.post('/verify-warranty', async (req, res) => {
     const { serialNumber, purchaseDate, email, duration, name, address, city, phoneNumber, model, billPdf, warrantyType } = req.body;
@@ -1185,7 +1187,7 @@ router.post('/bulk-warranty-verify', async (req, res) => {
 
 
         // Save PDF
-        const pdfPath = `uploads/bulk-warranty-verification-${batch}.pdf`;
+        const pdfPath = `uploads/BBWTY-${batch}.pdf`;
         pdf.create(pdfContent,pdfOptions).toFile(pdfPath, async (err, result) => {
             if (err) {
                 console.error('Error creating PDF:', err);
@@ -1288,6 +1290,7 @@ router.delete('/delete-reseller/:id', async (req, res) => {
 router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req, res) => {
     const warrantyId = req.params.warrantyId;
     const updatedWarrantyData = req.body;
+    
 
     // If a new file was uploaded, add its path to the updated data
     if (req.file) {
