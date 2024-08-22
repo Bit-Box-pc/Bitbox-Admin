@@ -421,7 +421,8 @@ router.get('/bulk-warranty-verify', async (req, res) => {
         ]);
 
         const totalCount = await Warranty.countDocuments({ batch: { $ne: null } });
-        const totalPages = Math.ceil(totalCount);
+        const totalPages = Math.ceil(totalCount / limit);
+
 
         res.render('Warranty/Bulk-Warranty-Verify', { groupedWarranties, loggedIN, totalPages, currentPage: page });
     } catch (error) {

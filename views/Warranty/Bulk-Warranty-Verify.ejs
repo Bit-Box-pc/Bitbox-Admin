@@ -187,17 +187,20 @@
                 </li>
             <% }); %>
         </ul>
-        <div class="pagination">
-            <% if (currentPage > 1) { %>
-                <button onclick="goToPage(<%= currentPage - 1 %>)">Previous</button>
-            <% } %>
-            <% for (let i = 1; i <= totalPages; i++) { %>
-                <button onclick="goToPage(<%= i %>)" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></button>
-            <% } %>
-            <% if (currentPage < totalPages) { %>
-                <button onclick="goToPage(<%= currentPage + 1 %>)">Next</button>
-            <% } %>
-        </div>
+        <% if (groupedWarranties.length > 0) { %>
+            <div class="pagination">
+                <% if (currentPage > 1) { %>
+                    <button onclick="goToPage(<%= currentPage - 1 %>)">Previous</button>
+                <% } %>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <button onclick="goToPage(<%= i %>)" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></button>
+                <% } %>
+                <% if (currentPage < totalPages) { %>
+                    <button onclick="goToPage(<%= currentPage + 1 %>)">Next</button>
+                <% } %>
+            </div>
+        <% } %>
+        
     </div>
 
     <script>
