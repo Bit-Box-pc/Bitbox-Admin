@@ -266,7 +266,7 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
         }
 
         const pdfOptions = {
-            format: 'A4', // Adjust the format if necessary
+            format: 'A2', // Adjust the format if necessary
             childProcessOptions: {
                 env: {
                     OPENSSL_CONF: '/dev/null'
