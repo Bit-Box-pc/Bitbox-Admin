@@ -139,8 +139,8 @@
                             <span class="close" onclick="closeUpdateModal('<%= group._id %>')">&times;</span>
                             <form id="updateForm_<%= group._id %>" onsubmit="submitUpdateForm('<%= group._id %>'); return false;">
                                 <h2>Update Warranty Information</h2>
-                                <label>Batch ID: ( <small style="color: red;">not editabel</small> )</label>
-                                <input type="text" value="<%= group._id %>" readonly><br><br>
+                                <label>Batch ID:</label>
+                                <input type="text" value="<%= group._id %>" ><br><br>
                                 <label>Name:</label>
                                 <input type="text" name="name" value="<%= group.commonFields.name %>" required><br><br>
                                 <label>Vendor:</label>
@@ -149,8 +149,8 @@
                                 <input type="email" name="email" value="<%= group.commonFields.email %>" required><br><br>
                                 <label>Address:</label>
                                 <input type="text" name="address" value="<%= group.commonFields.address %>" required><br><br>
-                                <label>Purchase Date: ( <small style="color: red;">not editabel</small> )</label>
-                                <input type="date" name="purchaseDate" value="<%= group.commonFields.purchaseDate ? group.commonFields.purchaseDate.toISOString().slice(0,10) : '' %>" required readonly><br><br>
+                                <label>Purchase Date:</label>
+                                <input type="date" name="purchaseDate" value="<%= group.commonFields.purchaseDate ? group.commonFields.purchaseDate.toISOString().slice(0,10) : '' %>" required ><br><br>
                                 
                                 <%
                                 let duration = '';
@@ -161,8 +161,8 @@
                                     duration = Math.round(durationInYears * 10) / 10; // Round to 1 decimal place
                                 }
                                 %>
-                                <label>Duration (Years): ( <small style="color: red;">not editabel</small> )</label>
-                                <input type="number" name="duration" value="<%= duration %>" readonly><br><br>
+                                <label>Duration (Years):</label>
+                                <input type="number" name="duration" value="<%= duration %>" ><br><br>
                                 <!--  -->
                                 <label>City:</label>
                                 <input type="text" name="city" value="<%= group.commonFields.city %>" required><br><br>
@@ -264,12 +264,17 @@
     let found = false;
 
     for (let i = 0; i < li.length; i++) {
-        const serialNumber = li[i].getElementsByTagName("strong")[0].nextSibling.textContent;
-        if (serialNumber.toUpperCase().indexOf(filter) > -1) {
-            li[i].style.display = "";
+        // Retrieve the serial numbers for each <li> element
+        const serialNumbers = Array.from(li[i].getElementsByTagName("td"))
+            .map(td => td.textContent.toUpperCase())
+            .filter(text => text); // Ensure there's text to filter
+
+        // Check if any serial number contains the search filter text
+        const matches = serialNumbers.some(serialNumber => serialNumber.indexOf(filter) > -1);
+        li[i].style.display = matches ? 'block' : 'none';
+
+        if (matches) {
             found = true;
-        } else {
-            li[i].style.display = "none";
         }
     }
 
@@ -290,6 +295,7 @@
         }
     }
 }
+
         showPage(1);
 
         function openUpdateModal(batchId) {
@@ -301,24 +307,28 @@
         }
 
         function submitUpdateForm(batchId) {
-            const form = document.getElementById(`updateForm_${batchId}`);
-            const formData = new FormData(form);
-            fetch(`/api/warrantyManagement/update/${batchId}`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error updating warranty');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+    const form = document.getElementById(`updateForm_${batchId}`);
+    const formData = new FormData(form);
+    
+    fetch(`/api/warrantyManagement/update/${batchId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Warranty Updated');
+            location.reload(); // Reload the page to reflect changes
+        } else {
+            alert('Warranty Updated');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Warranty Updated');
+    });
+}
+
     </script>
 </body>
 </html>

@@ -239,20 +239,54 @@
 }
         // JavaScript for search functionality
         function searchWarranty() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
-            const ul = document.getElementById('warrantyList');
-            const li = ul.getElementsByTagName('li');
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toLowerCase();
+    const ul = document.getElementById('warrantyList');
+    const li = ul.getElementsByTagName('li');
+    let found = false;
 
-            for (let i = 0; i < li.length; i++) {
-                const batchText = li[i].getElementsByTagName('strong')[0].textContent;
-                if (batchText.toLowerCase().indexOf(filter) > -1) {
-                    li[i].style.display = '';
-                } else {
-                    li[i].style.display = 'none';
-                }
+    // Iterate through each warranty item
+    for (let i = 0; i < li.length; i++) {
+        const serialTable = li[i].getElementsByClassName('serial-model-table')[0];
+        const serialRows = serialTable.getElementsByTagName('tr');
+        let hasMatch = false;
+
+        // Check each row in the serial number table
+        for (let j = 1; j < serialRows.length; j++) { // Start from 1 to skip the header row
+            const serialNumberCell = serialRows[j].getElementsByTagName('td')[0];
+            if (serialNumberCell && serialNumberCell.textContent.toLowerCase().indexOf(filter) > -1) {
+                hasMatch = true;
+                break;
             }
         }
+
+        // Show or hide the <li> based on the match
+        if (hasMatch) {
+            li[i].style.display = '';
+            found = true;
+        } else {
+            li[i].style.display = 'none';
+        }
+    }
+
+    // Display "No warranties found" message if no matches
+    const notFoundMessage = document.getElementById('notFoundMessage');
+    if (!found) {
+        if (!notFoundMessage) {
+            const message = document.createElement('p');
+            message.id = 'notFoundMessage';
+            message.textContent = 'No warranties found.';
+            message.style.textAlign = 'center';
+            message.style.marginTop = '20px';
+            ul.parentNode.insertBefore(message, ul.nextSibling);
+        }
+    } else {
+        if (notFoundMessage) {
+            notFoundMessage.remove();
+        }
+    }
+}
+
 
         // JavaScript for pagination
         function goToPage(page) {

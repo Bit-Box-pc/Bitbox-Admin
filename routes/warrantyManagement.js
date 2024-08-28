@@ -70,39 +70,44 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
     }
 
     try {
+        // Calculate new expiry date
+        if (updateData.purchaseDate && updateData.duration) {
+            const purchaseDate = new Date(updateData.purchaseDate);
+            const durationInYears = parseFloat(updateData.duration);
+            const expiryDate = new Date(purchaseDate.setFullYear(purchaseDate.getFullYear() + durationInYears));
+            updateData.expiryDate = expiryDate;
+        }
+
         const result = await Warranty.updateMany(
-            { batch: batchId },  // Find all documents with this batch ID
-            { $set: updateData } // Update these documents with the new data
+            { batch: batchId },
+            { $set: updateData }
         );
 
         if (result.matchedCount === 0) {
             return res.status(404).json({ success: false, error: 'Warranty not found' });
         }
 
-                // Fetch all warranties associated with the batch after update
-                const warranties = await Warranty.find({ batch: batchId });
-                const commonExpiryDate = warranties.length > 0 ? warranties[0].expiryDate : null;
-                
+        // Fetch all warranties associated with the batch after update
+        const warranties = await Warranty.find({ batch: batchId });
+        const commonExpiryDate = warranties.length > 0 ? warranties[0].expiryDate : null;
 
+        const getWarrantyImage = (duration) => {
+            if (duration == 1) {
+                return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/1_year_warranty.jpg";
+            } else if (duration == 2) {
+                return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/Warrant_2.png";
+            } else if (duration == 3) {
+                return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/Warrant_3.png";
+            } else if (duration == 5) {
+                return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/5_year.png";
+            } else {
+                return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/default.png";
+            }
+        };
+        const warrantyImageSrc = getWarrantyImage(updateData.duration);
 
-                const getWarrantyImage = (duration) => {
-                    if (duration == 1) {
-                        return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/1_year_warranty.jpg";
-                    } else if (duration == 2) {
-                        return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/Warrant_2.png"; // Replace with actual URL
-                    } else if (duration == 3) {
-                        return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/Warrant_3.png"; // Replace with actual URL
-                    } 
-                    else if (duration == 5){
-                        return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/5_year.png"
-                    }else {
-                        return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/default.png"; // Default to an empty string if no valid duration is provided
-                    }
-                };
-                const warrantyImageSrc = getWarrantyImage(updateData.duration);
-                
-                let pdfContent = `
-                <!DOCTYPE html>
+        let pdfContent = `
+        <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
@@ -112,7 +117,7 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
                 body {
                     font-family: Arial, sans-serif;
                 }
-        
+
                 .certificate {
                     border: 5px solid #C7A94F;
                     padding: 10px;
@@ -120,7 +125,7 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
                     grid-template-rows: auto 1fr auto;
                     position: relative;
                 }
-        
+
                 .certificate:before {
                     content: "";
                     position: absolute;
@@ -131,7 +136,7 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
                     border: 2px dotted #C7A94F;
                     pointer-events: none;
                 }
-        
+
                 .certificate-header {
                     display: grid;
                     grid-template-columns: 1fr;
@@ -139,21 +144,21 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
                     margin-bottom: 20px;
                     text-align: center;
                 }
-        
+
                 .certificate-header img {
                     width: 100%;
                     height: auto;
                 }
-        
+
                 .certificate-content {
                     margin-top: 20px;
                 }
-        
+
                 .certificate-content p {
                     font-size: 24px;
                     font-weight: 500;
                 }
-        
+
                 .details {
                     display: grid;
                     grid-template-columns: auto auto;
@@ -162,197 +167,176 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
                     margin-top: 10px;
                     text-align: center;
                 }
-        
+
                 .details div {
                     margin-bottom: 10px;
                 }
-        
+
                 .details div span {
                     display: inline-block;
                     width: 250px;
                     font-size: 20px;
                 }
-        
+
                 .certificate-footer {
                     margin-top: 20px;
                     font-size: 24px;
                     width: 100%;
                 }
-        
+
                 .terms-conditions {
                     margin-top: 20px;
                     font-size: 18px;
                     width: 100%;
                 }
                 .warranty-info {
-            border-collapse: collapse;
-            width: 100%;
-        }
-        
-        .warranty-info th, .warranty-info td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        
-        .warranty-info th {
-            background-color: #f2f2f2;
-        }
-        
-        .warranty-info tr:hover {
-            background-color: #f2f2f2;
-        }
+                    border-collapse: collapse;
+                    width: 100%;
+                }
+
+                .warranty-info th, .warranty-info td {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: left;
+                }
+
+                .warranty-info th {
+                    background-color: #f2f2f2;
+                }
+
+                .warranty-info tr:hover {
+                    background-color: #f2f2f2;
+                }
             </style>
         </head>
         <body>
             <div class="certificate">
                 <div class="certificate-header">
-                    <img src="${warrantyImageSrc}" Year Warranty">
+                    <img src="${warrantyImageSrc}" alt="${updateData.duration} Year Warranty">
                 </div>
-        
-                
-        
+
                 <div class="certificate-content">
                     <p>This document certifies the warranty coverage for the product purchased from PATA Electric Company and serves as proof of your entitlement to warranty services. Please read this certificate carefully for important terms and conditions.</p>
                     <div class="details">
-                            <table class="warranty-info">
-                                <tr>
-                                    <th>Product Model Number</th>
-                                    <th>Product Serial Number</th>
-                                    <th>Date of Purchase</th>
-                                    <th>Purchaser's Name</th>
-                                    <th>Seller's Name</th>
-                                
-                                    <th>Expiry Date</th>
-                                </tr>
-                 `;
-                warranties.forEach(entry => {
-                   
-                    pdfContent += `
-                        <tr>
-                            <td>${entry.model}</td>
-                            <td>${entry.serialNumber}</td>
-                            <td>${entry.purchaseDate}</td>
-                            <td>${entry.name}</td>
-                            <td>${entry.purchaseDetails}</td>
-                            <td>${formatDate(entry.expiryDate)}</td>
-                        </tr>`;
-                });
-                pdfContent += `
-                            </table>
-                        </div>
-                    </div>
-        
-                    
-                
-               
-                   
-        
-        
-                    <br> <br> <br> <br>
-                    <div class="certificate-footer">
-                        <p>PATA Electric Company warrants that the product mentioned above is free from defects in material and workmanship under normal use during the warranty period. The warranty covers repairs or replacement of the product components, subject to the terms and conditions specified herein.</p>
-                    </div>
-                    <div class="terms-conditions">
-                        <h3>Terms and Conditions:</h3>
-                        <p>■ Warranty Period: The warranty period commences on the date of purchase and lasts for the duration specified on this certificate.</p>
-                        <p>■ Proof of Purchase: This certificate, along with the original purchase receipt, serves as proof of purchase and is required for warranty claims.</p>
-                        <p>■ Scope of Warranty: The warranty covers defects in material and workmanship. It does not cover damages resulting from accidents, misuse, alterations, or unauthorized repairs.</p>
-                        <p>■ Warranty Service: In the event of a covered defect, please contact our customer support at Toll-Free: 18003009PATA | support@bitboxpc.com to initiate a warranty claim.</p>
+                        <table class="warranty-info">
+                            <tr>
+                                <th>Product Model Number</th>
+                                <th>Product Serial Number</th>
+                                <th>Date of Purchase</th>
+                                <th>Purchaser's Name</th>
+                                <th>Seller's Name</th>
+                                <th>Expiry Date</th>
+                            </tr>
+        `;
+        warranties.forEach(entry => {
+            pdfContent += `
+                <tr>
+                    <td>${entry.model}</td>
+                    <td>${entry.serialNumber}</td>
+                    <td>${entry.purchaseDate}</td>
+                    <td>${entry.name}</td>
+                    <td>${entry.purchaseDetails}</td>
+                    <td>${formatDate(entry.expiryDate)}</td>
+                </tr>`;
+        });
+        pdfContent += `
+                        </table>
                     </div>
                 </div>
+
+                <div class="certificate-footer">
+                    <p>PATA Electric Company warrants that the product mentioned above is free from defects in material and workmanship under normal use during the warranty period. The warranty covers repairs or replacement of the product components, subject to the terms and conditions specified herein.</p>
+                </div>
+                <div class="terms-conditions">
+                    <h3>Terms and Conditions:</h3>
+                    <p>■ Warranty Period: The warranty period commences on the date of purchase and lasts for the duration specified on this certificate.</p>
+                    <p>■ Proof of Purchase: This certificate, along with the original purchase receipt, serves as proof of purchase and is required for warranty claims.</p>
+                    <p>■ Scope of Warranty: The warranty covers defects in material and workmanship. It does not cover damages resulting from accidents, misuse, alterations, or unauthorized repairs.</p>
+                    <p>■ Warranty Service: In the event of a covered defect, please contact our customer support at Toll-Free: 18003009PATA | support@bitboxpc.com to initiate a warranty claim.</p>
+                </div>
             </div>
-         </div>
         </body>
         </html>
-                `;
+        `;
 
-                function formatDate(dateString) {
-                    const date = new Date(dateString);
-                    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-                    return date.toLocaleDateString('en-US', options);
-                  }
-        
-        
-                const pdfOptions = {
-                    format: 'A2',
-                    childProcessOptions: {
-                        env: {
-                            OPENSSL_CONF: '/dev/null'
-                        }
-                    }
-                };
-        
-        
-                // Save PDF
-                const pdfPath = `uploads/bulk-warranty-verification-${batchId}.pdf`;
-                pdf.create(pdfContent,pdfOptions).toFile(pdfPath, async (err, result) => {
-                    if (err) {
-                        console.error('Error creating PDF:', err);
-                        res.status(500).send('Error creating PDF');
-                        return;
-                    }
-        
-                    // Save certificate information in the database
-                    const certificatePromises = warranties.map(warranty => {
-                        return new Certificate({
-                            serialNumber: warranty.serialNumber,
-                            certificateLink: pdfPath
-                        }).save();
-                    });
-                    await Promise.all(certificatePromises);
-        
-                    // Send email with PDF attachment
-                    async function sendMail() {
-                        const info = await transporter.sendMail({
-                            from: '"Bitbox Alerts" <alerts@bitboxpc.com>',
-                            to: `"Recipient" <${updateData.email}>`,
-                            subject: "Warranty Verification Completed: Your Warranty is Attached",
-                            text: `Dear Bitbox PC User,
-                            Your bulk warranty verification details for batch number <b> ${batchId} </b> have been processed successfully. Please find the details attached.
-                            
-                            Regards,
-                            Team Support
-                            BitBox`,
-                            html: `<b>Dear Bitbox PC User, <br> We are pleased to inform you that the bulk warranty verification process has been successfully completed. Your warranty certificate is  attached here.</br>
-                            <br><br>
-        
-                            <b>Details: <br>
-                           
-                            Warranty Expiry: ${formatDate(commonExpiryDate)} <br>
-                            <h2>Coverage Details: ${updateData.warrantyType} </h2>  <br>
-                            
-                            </br>
-        
-        
-                            <br><br>If you have any questions about your warranty coverage or need further assistance, please feel free to contact our customer support team at support@bitboxpc.com<br><br>
-                            Regards,<br>
-                            Team Bitbox
-                            <br><br>
-                            Toll Free: 1800309PATA <br>
-                            eMail: <a href="mailto:support@bitboxpc.com">support@bitboxpc.com</a> <br>
-                            web: <a href="http://www.bitboxpc.com">www.bitboxpc.com</a> <br><br>
-                            <img src='https://www.bitboxpc.com/wp-content/uploads/2024/04/BitBox_logo1.png' height="60" width="140">`,
-                            attachments: [
-                                {
-                                    filename: `bulk-warranty-verification-${batchId}.pdf`,
-                                    path: result.filename,
-                                },
-                            ],
-                        });
-        
-                        //('Message sent: %s', info.messageId);
-                    }
-                    await sendMail();
-        
-                    res.send('<script>alert("Bulk Warranty Verification Successful. PDF sent to your email."); window.history.back();</script>');
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        const pdfOptions = {
+            format: 'A4', // Adjust the format if necessary
+            childProcessOptions: {
+                env: {
+                    OPENSSL_CONF: '/dev/null'
+                }
+            }
+        };
+
+        // Save PDF
+        const pdfPath = `uploads/bulk-warranty-verification-${batchId}.pdf`;
+        pdf.create(pdfContent, pdfOptions).toFile(pdfPath, async (err, result) => {
+            if (err) {
+                console.error('Error creating PDF:', err);
+                res.status(500).send('Error creating PDF');
+                return;
+            }
+
+            // Save certificate information in the database
+            const certificatePromises = warranties.map(warranty => {
+                return new Certificate({
+                    serialNumber: warranty.serialNumber,
+                    certificateLink: pdfPath
+                }).save();
+            });
+            await Promise.all(certificatePromises);
+
+            // Send email with PDF attachment
+            async function sendMail() {
+                const info = await transporter.sendMail({
+                    from: '"Bitbox Alerts" <alerts@bitboxpc.com>',
+                    to: `"Recipient" <${updateData.email}>`,
+                    subject: "Warranty Verification Completed: Your Warranty is Attached",
+                    text: `Dear Bitbox PC User,
+                    Your bulk warranty verification details for batch number ${batchId} have been processed successfully. Please find the details attached.
+                    
+                    Regards,
+                    Team Support
+                    BitBox`,
+                    html: `<b>Dear Bitbox PC User, <br> We are pleased to inform you that the bulk warranty verification process has been successfully completed. Your warranty certificate is attached here.</br>
+                    <br><br>
+    
+                    <b>Details: <br>
+                   
+                    Warranty Expiry: ${formatDate(commonExpiryDate)} <br>
+                    <h2>Coverage Details: ${updateData.warrantyType} </h2>  <br>
+                    
+                    </br>
+    
+                    <br><br>If you have any questions about your warranty coverage or need further assistance, please feel free to contact our customer support team at support@bitboxpc.com<br><br>
+                    Regards,<br>
+                    Team Bitbox
+                    <br><br>
+                    Toll Free: 1800309PATA <br>
+                    eMail: <a href="mailto:support@bitboxpc.com">support@bitboxpc.com</a> <br>
+                    web: <a href="http://www.bitboxpc.com">www.bitboxpc.com</a> <br><br>
+                    <img src='https://www.bitboxpc.com/wp-content/uploads/2024/04/BitBox_logo1.png' height="60" width="140">`,
+                    attachments: [
+                        {
+                            filename: `bulk-warranty-verification-${batchId}.pdf`,
+                            path: result.filename,
+                        },
+                    ],
                 });
 
-        
+                //('Message sent: %s', info.messageId);
+            }
+            await sendMail();
 
+            res.send('<script>alert("Bulk Warranty Verification Successful. PDF sent to your email."); window.history.back();</script>');
+        });
 
-
-        res.json({ success: true, result });
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, error: 'Server Error' });
@@ -1332,6 +1316,18 @@ router.post('/update-warranty/:warrantyId', upload.single('billPdf'), async (req
    
 
     try {
+       
+
+        // Calculate the new expiry date
+        if (updatedWarrantyData.purchaseDate && updatedWarrantyData.duration) {
+            const purchaseDateObj = new Date(updatedWarrantyData.purchaseDate);
+            const expiryDateObj = new Date(purchaseDateObj);
+            expiryDateObj.setFullYear(expiryDateObj.getFullYear() + parseInt(updatedWarrantyData.duration));
+            expiryDateObj.setHours(0, 0, 0, 0); // Set to the start of the day
+
+            updatedWarrantyData.expiryDate = expiryDateObj;
+        }
+
         const warranty = await Warranty.findByIdAndUpdate(warrantyId, updatedWarrantyData, { new: true });
         
         // Check if warranty is verified
