@@ -168,6 +168,9 @@
 
                 <input type="checkbox" id="updateRoleBulkVerified" name="roles" value="bulkVerified">
                 <label for="updateRoleBulkVerified">Bulk Verified Warranties</label><br>
+
+                <input type="checkbox" id="updateRoleUpdatePermission" name="roles" value="UpdatePermission">
+                <label for="updateRoleUpdatePermission">Update Permission</label><br>
             </div>
     
             <input type="checkbox" id="updateRoleInventoryManagement" name="roles" value="InventoryManagement" onchange="toggleUpdateInventoryOptions(this)">
@@ -273,7 +276,8 @@
                         document.getElementById('updateRoleBulkVerification').checked = user.accessTo.includes('BulkVerification');
                         document.getElementById('updateRoleExpiringWarranties').checked = user.accessTo.includes('ExpiringWarranties');
                         document.getElementById('updateRoleSingleVerified').checked = user.accessTo.includes('singleVerified');
-                        document.getElementById('updateRoleBulkVerified').checked = user.accessTo.includes('BulkVerified');
+                        document.getElementById('updateRoleBulkVerified').checked = user.accessTo.includes('bulkVerified');
+                        document.getElementById('updateRoleUpdatePermission').checked = user.accessTo.includes('UpdatePermission');
                     }
 
                     if (user.accessTo.includes('InventoryManagement')) {

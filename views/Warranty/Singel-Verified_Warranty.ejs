@@ -106,9 +106,10 @@
                         No certificate available
                     <% } %>
                     <br>
-                    
+                    <% if (accessTo.includes('UpdatePermission')) { %>
                     <!-- Update Button -->
                     <button onclick="openUpdateModal('<%= warranty._id %>')">Update</button>
+                    <% } %>
                     <br><br>
 
                     <!-- Modal for Update -->

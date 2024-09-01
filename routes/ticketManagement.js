@@ -97,26 +97,24 @@ router.get('/open-ticket', async (req, res) => {
     try {
         const loggedIN = true;
         const { username, accessTo } = req.session.user;
-        const tickets = await WarrantyClaim.find({ status: { $ne: 'Resolved ' } });
+        const tickets = await WarrantyClaim.find({ status: { $ne: 'Resolved' } });
         res.render('Ticket/OpenTicket', { loggedIN, accessTo, tickets });
     } catch (error) {
         console.error('Error fetching tickets:', error);
         res.status(500).send('Server error');
     }
 });
-
 router.get('/closed-ticket', async (req, res) => {
     try {
         const loggedIN = true;
         const { username, accessTo } = req.session.user;
-        const tickets = await WarrantyClaim.find({ status: 'Resolved ' });
+        const tickets = await WarrantyClaim.find({ status: 'Resolved' });
         res.render('Ticket/ClosedTickets', { loggedIN, accessTo, tickets });
     } catch (error) {
         console.error('Error fetching tickets:', error);
         res.status(500).send('Server error');
     }
 });
-
 router.get('/add-ticket', async (req, res) => {
     try {
         const loggedIN= true;
@@ -250,6 +248,39 @@ router.get('/tickets', async (req, res) => {
     try {
         const tickets = await WarrantyClaim.find();
         res.json(tickets);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.get('/billPdf/:serialNumber', async (req, res) => {
+    try {
+        const warranty = await Warranty.findOne({ serialNumber: req.params.serialNumber });
+        if (warranty && warranty.billPdf) {
+            // Send only the relative path, not the full API path
+            const relativePath = warranty.billPdf.replace('/api/ticketManagement', '');
+            res.json({ billPdf: relativePath });
+        } else {
+            res.status(404).json({ message: 'Bill PDF not found' });
+        }
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.get('/serialDetails/:serialNumber', async (req, res) => {
+    try {
+        const serialDetails = await SerialNumber.findOne({ serialNumber: req.params.serialNumber });
+        if (serialDetails) {
+            // Convert the dynamicFields Map to a plain object
+            const plainSerialDetails = serialDetails.toObject();
+            if (plainSerialDetails.dynamicFields) {
+                plainSerialDetails.dynamicFields = Object.fromEntries(plainSerialDetails.dynamicFields);
+            }
+            res.json(plainSerialDetails);
+        } else {
+            res.status(404).json({ message: 'Serial details not found' });
+        }
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

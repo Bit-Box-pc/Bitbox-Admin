@@ -529,13 +529,16 @@ router.get('/singel-Verified_Warranty', async (req, res) => {
             ...warranty.toObject(),
             certificateLink: certificateMap.get(warranty.serialNumber) || null
         }));
+        const {accessTo } = req.session.user;
 
         res.render('Warranty/Singel-Verified_Warranty', { 
             warranties: warrantiesWithCertificates,
             loggedIN,
             itemsPerPage,
             currentPage,
-            totalPages
+            totalPages,
+            accessTo
+            
         });
     } catch (error) {
         console.error(error);
