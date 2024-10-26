@@ -77,8 +77,7 @@
             <input type="text" style="border-width: 5px;" id="searchInput" placeholder="Search by Serial Number" onkeyup="searchWarranty()">
         </div>
         <ul id="warrantyList">
-            <% warranties.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).forEach(warranty => { %>
-
+            <% warranties.forEach(warranty => { %>
                 <li class="<%= warranty.verify ? 'verified' : 'unverified' %>">
                     <strong>Serial Number:</strong> <%= warranty.serialNumber %><br>
                     <strong>Expiry Date:</strong><%=  new Date(warranty.expiryDate).toLocaleDateString()   %><br>
@@ -185,26 +184,52 @@
                             <button type="submit" class="verify-btn">Verify</button>
                         </form>
                     <% } %>
-                </li>
-           
+               </li>
             <% }); %>
         </ul>
 
         <!-- Pagination controls -->
         <!-- Pagination controls -->
+
+<div class="pagination-info">
+            Showing <%= (currentPage - 1) * itemsPerPage + 1 %> to <%= Math.min(currentPage * itemsPerPage, paginationInfo.totalWarranties) %> of <%= paginationInfo.totalWarranties %> warranties
+        </div>
 <div class="pagination">
-    <% if (currentPage > 1) { %>
-        <button onclick="goToPage(<%= currentPage - 1 %>)">Previous</button>
-    <% } %>
-    
-    <% for (let i = 1; i <= totalPages; i++) { %>
-        <button onclick="goToPage(<%= i %>)" <%= i === currentPage ? 'class="active"' : '' %>><%= i %></button>
-    <% } %>
-    
-    <% if (currentPage < totalPages) { %>
-        <button onclick="goToPage(<%= currentPage + 1 %>)">Next</button>
-    <% } %>
-</div>
+            <button 
+                onclick="goToPage(1)" 
+                <%= currentPage === 1 ? 'disabled' : '' %>
+            >First</button>
+            
+            <button 
+                onclick="goToPage(<%= currentPage - 1 %>)" 
+                <%= currentPage === 1 ? 'disabled' : '' %>
+            >Previous</button>
+            
+            <% 
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            %>
+            
+            <% for (let i = startPage; i <= endPage; i++) { %>
+                <button 
+                    onclick="goToPage(<%= i %>)" 
+                    class="<%= i === currentPage ? 'active' : '' %>"
+                ><%= i %></button>
+            <% } %>
+            
+            <button 
+                onclick="goToPage(<%= currentPage + 1 %>)" 
+                <%= currentPage === totalPages ? 'disabled' : '' %>
+            >Next</button>
+            
+            <button 
+                onclick="goToPage(<%= totalPages %>)" 
+                <%= currentPage === totalPages ? 'disabled' : '' %>
+            >Last</button>
+        </div>
     </div>
 
     <script>
@@ -212,8 +237,15 @@
         let currentPage = 1;
 
         function goToPage(page) {
-    window.location.href = `/api/warrantyManagement/singel-Verified_Warranty?page=${page}`;
-}
+            // Show loading state
+            document.body.style.cursor = 'wait';
+            const buttons = document.querySelectorAll('.pagination button');
+            buttons.forEach(button => {
+                button.disabled = true;
+            });
+
+            window.location.href = `/api/warrantyManagement/singel-Verified_Warranty?page=${page}`;
+        }
 
 
         function filterWarranties(status) {
