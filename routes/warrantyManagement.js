@@ -510,26 +510,60 @@ router.get('/singel-Verified_Warranty', async (req, res) => {
     const currentPage = parseInt(req.query.page) || 1;
 
     try {
-        const totalWarranties = await Warranty.countDocuments({ batch: null, verify: true });
+        // First, get the total count of verified warranties
+        const totalWarranties = await Warranty.countDocuments({ 
+            batch: null, 
+            verify: true 
+        });
+
         const totalPages = Math.ceil(totalWarranties / itemsPerPage);
 
-        const warranties = await Warranty.find({ batch: null, verify: true })
-            .skip((currentPage - 1) * itemsPerPage)
-            .limit(itemsPerPage);
+        // Fetch paginated warranties with proper skip and limit
+        // Add sort to ensure consistent ordering
+        const warranties = await Warranty.find({ 
+            batch: null, 
+            verify: true 
+        })
+        .sort({ createdAt: -1 }) // Sort by creation date, newest first
+        .skip((currentPage - 1) * itemsPerPage)
+        .limit(itemsPerPage)
+        .lean(); // Use lean() for better performance since we're modifying the objects
+
+        if (!warranties.length && currentPage > 1) {
+            // If no warranties found and we're not on page 1, redirect to page 1
+            return res.redirect('/api/warrantyManagement/singel-Verified_Warranty?page=1');
+        }
 
         // Fetch certificates for all warranties
         const serialNumbers = warranties.map(w => w.serialNumber);
-        const certificates = await Certificate.find({ serialNumber: { $in: serialNumbers } });
+        const certificates = await Certificate.find({ 
+            serialNumber: { $in: serialNumbers } 
+        }).lean();
 
         // Create a map of serialNumber to certificate
-        const certificateMap = new Map(certificates.map(c => [c.serialNumber, c.certificateLink]));
+        const certificateMap = new Map(
+            certificates.map(c => [c.serialNumber, c.certificateLink])
+        );
 
         // Add certificate information to each warranty
         const warrantiesWithCertificates = warranties.map(warranty => ({
-            ...warranty.toObject(),
+            ...warranty,
             certificateLink: certificateMap.get(warranty.serialNumber) || null
         }));
-        const {accessTo } = req.session.user;
+
+        // Get access permissions from session
+        const { accessTo } = req.session.user;
+
+        // Add pagination info to help with debugging
+        const paginationInfo = {
+            currentPage,
+            totalPages,
+            totalWarranties,
+            warrantiesOnThisPage: warrantiesWithCertificates.length,
+            skip: (currentPage - 1) * itemsPerPage
+        };
+
+        console.log('Pagination Debug Info:', paginationInfo);
 
         res.render('Warranty/Singel-Verified_Warranty', { 
             warranties: warrantiesWithCertificates,
@@ -537,11 +571,12 @@ router.get('/singel-Verified_Warranty', async (req, res) => {
             itemsPerPage,
             currentPage,
             totalPages,
-            accessTo
-            
+            accessTo,
+            paginationInfo // Include in response for debugging
         });
+
     } catch (error) {
-        console.error(error);
+        console.error('Warranty pagination error:', error);
         res.status(500).send('Internal Server Error');
     }
 });
