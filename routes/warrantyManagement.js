@@ -506,7 +506,7 @@ router.get('/serial-numbers/:serial', async (req, res) => {
 });
 router.get('/singel-Verified_Warranty', async (req, res) => {
     const loggedIN = true;
-    const itemsPerPage = 20;
+    const itemsPerPage = 10;
     const currentPage = parseInt(req.query.page) || 1;
 
     try {
