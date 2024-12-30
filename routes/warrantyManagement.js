@@ -74,7 +74,24 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
         if (updateData.purchaseDate && updateData.duration) {
             const purchaseDate = new Date(updateData.purchaseDate);
             const durationInYears = parseFloat(updateData.duration);
-            const expiryDate = new Date(purchaseDate.setFullYear(purchaseDate.getFullYear() + durationInYears));
+            // Custom function to calculate expiry date
+            function calculateExpiryDate(purchaseDate, durationInYears) {
+                const startDate = new Date(purchaseDate);
+                let currentDate = new Date(startDate);
+
+                // Loop over the years and adjust the expiry date
+                for (let year = 1; year <= durationInYears; year++) {
+                    const isLeapYear = year % 2 !== 0; // Alternate the days for each year
+                    const daysInYear = isLeapYear ? 364 : 365; // 364 days for odd years, 365 for even years
+
+                    // Add the calculated days to the current date
+                    currentDate.setDate(currentDate.getDate() + daysInYear);
+                }
+
+                return currentDate;
+            }
+            // Get the expiry date using the custom function
+            const expiryDate = calculateExpiryDate(purchaseDate, durationInYears);
             updateData.expiryDate = expiryDate;
         }
 
@@ -233,7 +250,7 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
                 <tr>
                     <td>${entry.model}</td>
                     <td>${entry.serialNumber}</td>
-                    <td>${entry.purchaseDate}</td>
+                    <td>${formatDate(entry.purchaseDate)}</td>
                     <td>${entry.name}</td>
                     <td>${entry.purchaseDetails}</td>
                     <td>${formatDate(entry.expiryDate)}</td>
