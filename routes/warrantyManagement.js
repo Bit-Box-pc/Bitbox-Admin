@@ -74,31 +74,14 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
         if (updateData.purchaseDate && updateData.duration) {
             const purchaseDate = new Date(updateData.purchaseDate);
             const durationInYears = parseFloat(updateData.duration);
-            // Custom function to calculate expiry date
-            function calculateExpiryDate(purchaseDate, durationInYears) {
-                const startDate = new Date(purchaseDate);
-                let currentDate = new Date(startDate);
-                
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            return date.toLocaleDateString('en-US', options);
-        }
 
-                // Loop over the years and adjust the expiry date
-                for (let year = 1; year <= durationInYears; year++) {
-                    const isLeapYear = year % 2 !== 0; // Alternate the days for each year
-                    const daysInYear = isLeapYear ? 364 : 365; // 364 days for odd years, 365 for even years
+            const calculateExpiryDate = (purchaseDate, durationInYears) => {
+                const expiryDate = new Date(purchaseDate);
+                expiryDate.setFullYear(expiryDate.getFullYear() + durationInYears);
+                return expiryDate;
+            };
 
-                    // Add the calculated days to the current date
-                    currentDate.setDate(currentDate.getDate() + daysInYear);
-                }
-
-                return currentDate;
-            }
-            // Get the expiry date using the custom function
-            const expiryDate = calculateExpiryDate(purchaseDate, durationInYears);
-            updateData.expiryDate = expiryDate;
+            updateData.expiryDate = calculateExpiryDate(purchaseDate, durationInYears);
         }
 
         const result = await Warranty.updateMany(
@@ -107,41 +90,44 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
         );
 
         if (result.matchedCount === 0) {
-            return res.status(404).json({ success: false, error: 'Warranty not found' });
+            return res.status(404).json({ success: false, error: "Warranty not found" });
         }
 
-        // Fetch all warranties associated with the batch after update
+        // Fetch updated warranties
         const warranties = await Warranty.find({ batch: batchId });
-        const commonExpiryDate = warranties.length > 0 ? warranties[0].expiryDate : null;
+        console.log("Warranties for Batch:", warranties);
+
+        if (!warranties || warranties.length === 0) {
+            return res.status(404).json({ success: false, error: "No warranties found for the provided batch." });
+        }
+
+        const serialDetails = await SerialNumber.findOne({ serialNumber: warranties[0].serialNumber });
+        console.log("Serial Details:", serialDetails);
+
+        if (!serialDetails) {
+            console.error("No specifications found for serial number:", warranties[0].serialNumber);
+        }
 
         const getWarrantyImage = (duration) => {
-            if (duration == 1) {
-                return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/1_year_warranty.jpg";
-            } else if (duration == 2) {
-                return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/Warrant_2.png";
-            } else if (duration == 3) {
-                return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/Warrant_3.png";
-            } else if (duration == 5) {
-                return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/5_year.png";
-            } else {
-                return "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/default.png";
-            }
+            const images = {
+                1: "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/1_year_warranty.jpg",
+                2: "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/Warrant_2.png",
+                3: "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/Warrant_3.png",
+                5: "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/5_year.png",
+            };
+            return images[duration] || "https://raw.githubusercontent.com/OPAMDevloper/Bitbox-Admin/master/logos/default.png";
         };
 
         const warrantyImageSrc = getWarrantyImage(updateData.duration);
-        const serialDetails = await SerialNumber.findOne({ serialNumber: warranties[0].serialNumber });
-if (!serialDetails) {
-    console.error("Failed to fetch specifications for serial number:", warranties[0].serialNumber);
-}
 
         let pdfContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warranty Certificate</title>
     <style>
+        <style>
         body {
             font-family: Arial, sans-serif;
         }
@@ -238,17 +224,17 @@ if (!serialDetails) {
             background-color: #f2f2f2;
         }
     </style>
+    </style>
 </head>
 <body>
     <div class="certificate">
         <div class="certificate-header">
             <img src="${warrantyImageSrc}" alt="${updateData.duration} Year Warranty">
         </div>
-
         <div class="certificate-content">
-            <p>This document certifies the warranty coverage for the product purchased from PATA Electric Company and serves as proof of your entitlement to warranty services. Please read this certificate carefully for important terms and conditions.</p>
-            <div class="details">
-                <table class="warranty-info">
+            <h3>Warranty Details:</h3>
+            <table class="warranty-info">
+                <thead>
                     <tr>
                         <th>Product Model Number</th>
                         <th>Product Serial Number</th>
@@ -256,9 +242,11 @@ if (!serialDetails) {
                         <th>Purchaser's Name</th>
                         <th>Seller's Name</th>
                         <th>Expiry Date</th>
-                    </tr>`;
-warranties.forEach(entry => {
-    pdfContent += `
+                    </tr>
+                </thead>
+                <tbody>`;
+        warranties.forEach(entry => {
+            pdfContent += `
                     <tr>
                         <td>${entry.model}</td>
                         <td>${entry.serialNumber}</td>
@@ -267,68 +255,55 @@ warranties.forEach(entry => {
                         <td>${entry.purchaseDetails}</td>
                         <td>${formatDate(entry.expiryDate)}</td>
                     </tr>`;
-});
+        });
 
-pdfContent += `
-    </table>
-    </div>
-    <div class="certificate-content">
-        <h3>Device Specifications:</h3>
-        <table class="warranty-info">
-            <thead>
-                <tr>
-                    <th>Specification</th>
-                    <th>Details</th>
-                </tr>
-            </thead>
-            <tbody>`;
-if (serialDetails && serialDetails._doc) {
-    pdfContent += Object.entries(serialDetails._doc)
-        .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'dynamicFields'].includes(key))
-        .map(([key, value]) => `
-            <tr>
-                <td>${key}</td>
-                <td>${value}</td>
-            </tr>`).join('');
-} else {
-    pdfContent += `
-            <tr>
-                <td colspan="2">No specifications available.</td>
-            </tr>`;
-}
-pdfContent += `
-            </tbody>
-        </table>
-    </div>`;
-pdfContent += `
+        pdfContent += `
                 </tbody>
             </table>
-        </div>
-
-        <div class="certificate-footer">
-            <p>PATA Electric Company warrants that the product mentioned above is free from defects in material and workmanship under normal use during the warranty period. The warranty covers repairs or replacement of the product components, subject to the terms and conditions specified herein.</p>
-        </div>
-        <div class="terms-conditions">
-            <h3>Terms and Conditions:</h3>
-            <p>■ Warranty Period: The warranty period commences on the date of purchase and lasts for the duration specified on this certificate.</p>
-            <p>■ Proof of Purchase: This certificate, along with the original purchase receipt, serves as proof of purchase and is required for warranty claims.</p>
-            <p>■ Scope of Warranty: The warranty covers defects in material and workmanship. It does not cover damages resulting from accidents, misuse, alterations, or unauthorized repairs.</p>
-            <p>■ Warranty Service: In the event of a covered defect, please contact our customer support at Toll-Free: 18003009PATA | support@bitboxpc.com to initiate a warranty claim.</p>
+            <h3>Device Specifications:</h3>
+            <table class="specs-table">
+                <thead>
+                    <tr>
+                        <th>Specification</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        if (serialDetails) {
+            pdfContent += Object.entries(serialDetails)
+                .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'dynamicFields'].includes(key))
+                .map(([key, value]) => `
+                    <tr>
+                        <td>${key}</td>
+                        <td>${value}</td>
+                    </tr>`).join('');
+        } else {
+            pdfContent += `
+                    <tr>
+                        <td colspan="2">No specifications available.</td>
+                    </tr>`;
+        }
+        pdfContent += `
+                </tbody>
+            </table>
         </div>
     </div>
 </body>
 </html>`;
 
-const pdfOptions = {
-    format: 'A2',
-    orientation: 'portrait', // Ensure proper orientation
-    border: {
-        top: "10mm",
-        right: "10mm",
-        bottom: "10mm",
-        left: "10mm"
+        const pdfOptions = {
+            format: 'A2',
+            orientation: 'portrait',
+            border: "10mm",
+        };
+
+        // Logic to generate PDF here
+
+    } catch (err) {
+        console.error("Error updating warranty:", err);
+        res.status(500).json({ success: false, error: "Internal server error" });
     }
-};
+});
 
 
         // Save PDF
