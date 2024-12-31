@@ -257,6 +257,26 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
                 </tr>`;
         });
         pdfContent += `
+    <table class="specs-table">
+        <thead>
+            <tr>
+                <th>Specification</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${Object.entries(serialDetails._doc)
+                .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'dynamicFields'].includes(key))
+                .map(([key, value]) => `
+                    <tr>
+                        <td>${key}</td>
+                        <td>${value}</td>
+                    </tr>
+                `).join('')}
+        </tbody>
+    </table>`;
+
+        pdfContent += `
                         </table>
                     </div>
                 </div>
