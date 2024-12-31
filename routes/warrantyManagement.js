@@ -266,28 +266,36 @@ warranties.forEach(entry => {
 });
 
 pdfContent += `
-                </table>
-            </div>
-        </div>
-        <div class="certificate-content">
-            <h3>Device Specifications:</h3>
-            <table class="specs-table">
-                <thead>
-                    <tr>
-                        <th>Specification</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-Object.entries(serialDetails._doc)
-    .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'dynamicFields'].includes(key))
-    .forEach(([key, value]) => {
-        pdfContent += `
-                    <tr>
-                        <td>${key}</td>
-                        <td>${value}</td>
-                    </tr>`;
-    });
+    </table>
+    </div>
+    <div class="certificate-content">
+        <h3>Device Specifications:</h3>
+        <table class="warranty-info">
+            <thead>
+                <tr>
+                    <th>Specification</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>`;
+if (serialDetails && serialDetails._doc) {
+    pdfContent += Object.entries(serialDetails._doc)
+        .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'dynamicFields'].includes(key))
+        .map(([key, value]) => `
+            <tr>
+                <td>${key}</td>
+                <td>${value}</td>
+            </tr>`).join('');
+} else {
+    pdfContent += `
+            <tr>
+                <td colspan="2">No specifications available.</td>
+            </tr>`;
+}
+pdfContent += `
+            </tbody>
+        </table>
+    </div>`;
 pdfContent += `
                 </tbody>
             </table>
@@ -307,15 +315,17 @@ pdfContent += `
 </body>
 </html>`;
 
+const pdfOptions = {
+    format: 'A2',
+    orientation: 'portrait', // Ensure proper orientation
+    border: {
+        top: "10mm",
+        right: "10mm",
+        bottom: "10mm",
+        left: "10mm"
+    }
+};
 
-        const pdfOptions = {
-            format: 'A2', // Adjust the format if necessary
-            childProcessOptions: {
-                env: {
-                    OPENSSL_CONF: '/dev/null'
-                }
-            }
-        };
 
         // Save PDF
         const pdfPath = `uploads/bulk-warranty-verification-${batchId}.pdf`;
