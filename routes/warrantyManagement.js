@@ -369,11 +369,6 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
             res.send('<script>alert("Bulk Warranty Verification Successful. PDF sent to your email."); window.history.back();</script>');
         });
 
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, error: 'Server Error' });
-    }
-});
 router.get('/', (req, res) => {
     const loggedIN = true;
     const { username, accessTo } = req.session.user;
