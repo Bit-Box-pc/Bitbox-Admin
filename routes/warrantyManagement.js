@@ -129,6 +129,10 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
         };
 
         const warrantyImageSrc = getWarrantyImage(updateData.duration);
+        const serialDetails = await SerialNumber.findOne({ serialNumber: warranties[0].serialNumber });
+if (!serialDetails) {
+    console.error("Failed to fetch specifications for serial number:", warranties[0].serialNumber);
+}
 
         let pdfContent = `
 <!DOCTYPE html>
