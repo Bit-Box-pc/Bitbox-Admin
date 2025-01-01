@@ -129,6 +129,9 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
         };
 
         const warrantyImageSrc = getWarrantyImage(updateData.duration);
+        const serialDetails = await SerialNumber.findOne({ serialNumber: serialNumber });
+
+        console.log("Serial Details:", serialDetails);
 
         let pdfContent = `
 <!DOCTYPE html>
@@ -389,17 +392,20 @@ const pdfOptions = {
 });
 router.get('/', (req, res) => {
     const loggedIN = true;
-    const { username, accessTo } = req.session.user;
-    res.render('WarrantyManagement', {loggedIN,accessTo});
+    const user = req.session.user || {};
+    const { username, accessTo } = user;
+    res.render('WarrantyManagement', { loggedIN, accessTo });
 });
+
 router.get('/register-warranty', (req, res) => {
     const loggedIN = true;
-    res.render('Warranty/Register-Warranty', {loggedIN});
+    res.render('Warranty/Register-Warranty', { loggedIN });
 });
+
 router.get('/singel-warranty-verify', async (req, res) => {
     const loggedIN = true;
-    const itemsPerPage = 10;
-    const currentPage = parseInt(req.query.page) || 1;
+    const itemsPerPage = Math.max(1, parseInt(req.query.limit) || 10);
+    const currentPage = Math.max(1, parseInt(req.query.page) || 1);
 
     try {
         const totalWarranties = await Warranty.countDocuments({ batch: null, verify: false });
@@ -409,56 +415,48 @@ router.get('/singel-warranty-verify', async (req, res) => {
             .skip((currentPage - 1) * itemsPerPage)
             .limit(itemsPerPage);
 
-        res.render('Warranty/Singel-Warranty-Verify', { 
+        res.render('Warranty/Singel-Warranty-Verify', {
             warranties,
             loggedIN,
             itemsPerPage,
             currentPage,
-            totalPages
+            totalPages,
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
+        console.error("Error in /singel-warranty-verify:", error);
+        res.status(500).send('Failed to fetch single warranty verification data.');
     }
 });
-router.get('/bulk-warranty-verify', async (req, res) => {
-    try {
-        const loggedIN = true;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
 
+router.get('/bulk-warranty-verify', async (req, res) => {
+    const loggedIN = true;
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.max(1, parseInt(req.query.limit) || 10);
+    const skip = (page - 1) * limit;
+
+    try {
         const groupedWarranties = await Warranty.aggregate([
-            {
-                $match: {
-                    batch: { $ne: null},
-                    verify: {$ne: true}
-                }
-            },
-            {
-                $group: {
-                    _id: "$batch",
-                    commonFields: { $first: "$$ROOT" },
-                    serialAndModel: {
-                        $push: {
-                            serialNumber: "$serialNumber",
-                            model: "$model"
-                        }
-                    }
-                }
-            }
+            { $match: { batch: { $ne: null }, verify: { $ne: true } } },
+            { $group: { ... } },
+            { $skip: skip },
+            { $limit: limit },
         ]);
 
         const totalCount = await Warranty.countDocuments({ batch: { $ne: null } });
         const totalPages = Math.ceil(totalCount / limit);
 
-
-        res.render('Warranty/Bulk-Warranty-Verify', { groupedWarranties, loggedIN, totalPages, currentPage: page });
+        res.render('Warranty/Bulk-Warranty-Verify', {
+            groupedWarranties,
+            loggedIN,
+            totalPages,
+            currentPage: page,
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal Server Error');
+        console.error("Error in /bulk-warranty-verify:", error);
+        res.status(500).send('Failed to fetch bulk warranty verification data.');
     }
 });
+
 router.get('/expiring-warranty-render', async (req, res) => {
     try {
         const loggedIN = true;
