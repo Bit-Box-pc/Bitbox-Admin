@@ -436,10 +436,26 @@ router.get('/bulk-warranty-verify', async (req, res) => {
 
     try {
         const groupedWarranties = await Warranty.aggregate([
-            { $match: { batch: { $ne: null }, verify: { $ne: true } } },
-            { $group: { ... } },
+            { 
+                $match: { 
+                    batch: { $ne: null }, 
+                    verify: { $ne: true } 
+                } 
+            },
+            { 
+                $group: { 
+                    _id: "$batch", // Group by the batch field
+                    commonFields: { $first: "$$ROOT" }, // Keep the first document in the group
+                    serialAndModel: {
+                        $push: { 
+                            serialNumber: "$serialNumber", 
+                            model: "$model" 
+                        } 
+                    }
+                } 
+            },
             { $skip: skip },
-            { $limit: limit },
+            { $limit: limit }
         ]);
 
         const totalCount = await Warranty.countDocuments({ batch: { $ne: null } });
@@ -456,6 +472,7 @@ router.get('/bulk-warranty-verify', async (req, res) => {
         res.status(500).send('Failed to fetch bulk warranty verification data.');
     }
 });
+
 
 router.get('/expiring-warranty-render', async (req, res) => {
     try {
