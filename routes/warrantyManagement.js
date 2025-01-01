@@ -129,7 +129,7 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
         };
 
         const warrantyImageSrc = getWarrantyImage(updateData.duration);
-        const serialDetails = await SerialNumber.findOne({ serialNumber: SerialNumber });
+        const serialDetails = await SerialNumber.findOne({ serialNumber: updateData.serialNumber });
 
 
         console.log("Serial Details:", serialDetails);
@@ -283,15 +283,16 @@ pdfContent += `
                     </tr>
                 </thead>
                 <tbody>`;
-Object.entries(serialDetails._doc)
-    .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'dynamicFields'].includes(key))
-    .forEach(([key, value]) => {
-        pdfContent += `
-                    <tr>
-                        <td>${key}</td>
-                        <td>${value}</td>
-                    </tr>`;
-    });
+                Object.entries(serialDetails._doc)
+                .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'dynamicFields'].includes(key))
+                .forEach(([key, value]) => {
+                    pdfContent += `
+                        <tr>
+                            <td>${key}</td>
+                            <td>${value}</td>
+                        </tr>`;
+                });
+            
 pdfContent += `
                 </tbody>
             </table>
