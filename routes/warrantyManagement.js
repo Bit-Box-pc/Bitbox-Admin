@@ -129,7 +129,8 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
         };
 
         const warrantyImageSrc = getWarrantyImage(updateData.duration);
-        const serialDetails = await SerialNumber.findOne({ serialNumber: serialNumber });
+        const serialDetails = await SerialNumber.findOne({ serialNumber: SerialNumber });
+
 
         console.log("Serial Details:", serialDetails);
 
