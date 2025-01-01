@@ -129,11 +129,31 @@ router.post('/update/:id', upload.single('billPdf'), async (req, res) => {
         };
 
         const warrantyImageSrc = getWarrantyImage(updateData.duration);
-        const serialDetails = await SerialNumber.findOne({ serialNumber: updateData.serialNumber });
+        const warrantyPromises = warranties.map(async (entry) => {
+            const serialDetails = await SerialNumber.findOne({ serialNumber: entry.serialNumber });
+        
+            // If no serial details found, skip to the next warranty
+            if (!serialDetails) {
+                return null;
+            }
+    // Generate the specification rows for the device
+    const specsTable = Object.entries(serialDetails._doc)
+        .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber'].includes(key))
+        .map(([key, value]) => `
+            <tr>
+                <td>${key}</td>
+                <td>${value}</td>
+            </tr>`).join('');
 
+    // Return the warranty with specs table content
+    return {
+        ...entry,
+        specsTable
+    };
+});
 
-        console.log("Serial Details:", serialDetails);
-
+// Wait for all the warranty details to be fetched
+const warrantiesWithSpecs = await Promise.all(warrantyPromises);
         let pdfContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -269,12 +289,11 @@ warranties.forEach(entry => {
                     </tr>`;
 });
 
-pdfContent += `
-                </table>
-            </div>
-        </div>
+warrantiesWithSpecs.forEach(warranty => {
+    if (warranty) {
+        pdfContent += `
         <div class="certificate-content">
-            <h3>Device Specifications:</h3>
+            <h3>Device Specifications for Serial Number: ${warranty.serialNumber}</h3>
             <table class="specs-table">
                 <thead>
                     <tr>
@@ -282,16 +301,13 @@ pdfContent += `
                         <th>Details</th>
                     </tr>
                 </thead>
-                <tbody>`;
-                Object.entries(serialDetails._doc)
-                .filter(([key]) => !['_id', '__v', 'serialNumber', 'modelNumber', 'dynamicFields'].includes(key))
-                .forEach(([key, value]) => {
-                    pdfContent += `
-                        <tr>
-                            <td>${key}</td>
-                            <td>${value}</td>
-                        </tr>`;
-                });
+                <tbody>
+                    ${warranty.specsTable} <!-- Inject the device specs -->
+                </tbody>
+            </table>
+        </div>`;
+    }
+});
             
 pdfContent += `
                 </tbody>
