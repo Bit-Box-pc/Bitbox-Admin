@@ -1486,6 +1486,7 @@ router.post('/bulk-warranty-verify', async (req, res) => {
 
         const pdfPath = `uploads/BBWTY-${batch}.pdf`;
 
+
         // Generate and save PDF
         pdf.create(pdfContent, pdfOptions).toFile(pdfPath, async (err, result) => {
             if (err) {
