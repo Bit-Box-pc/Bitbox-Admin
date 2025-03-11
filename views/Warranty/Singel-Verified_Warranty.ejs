@@ -37,20 +37,62 @@
             cursor: pointer;
         }
         .pagination {
-        margin-top: 20px;
-        text-align: center;
-    }
+            margin-top: 20px;
+            text-align: center;
+        }
 
-    .pagination button {
-        margin: 0 5px;
-        padding: 5px 10px;
-        cursor: pointer;
-    }
+        .pagination button {
+            margin: 0 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
 
-    .pagination button.active {
-        background-color: #007bff;
-        color: white;
-    }
+        .pagination button.active {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        #notFoundMessage {
+            text-align: center;
+            margin-top: 20px;
+            color: red;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .search-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .search-container input {
+            padding: 10px;
+            width: 60%;
+            border: 2px solid #b0b3c6;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .search-container button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        .search-container button:hover {
+            background-color: #0056b3;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -72,13 +114,18 @@
     <div class="container warranty-info" style="margin-top: 8%;">
         <h2>All Verified Warranties</h2>
         <div class="controls">
-            <!-- <button onclick="filterWarranties('verified')">Verified</button> -->
-            <!-- <button onclick="filterWarranties('verified')">Verified</button> -->
-            <input type="text" style="border-width: 5px;" id="searchInput" placeholder="Search by Serial Number" onkeyup="searchWarranty()">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search by Serial Number" onkeyup="searchWarranty()">
+                <button onclick="searchWarranty()">Search</button>
+            </div>
         </div>
+        
+        <!-- No results message -->
+        <p id="notFoundMessage">No warranties found matching your search.</p>
+        
         <ul id="warrantyList">
             <% warranties.forEach(warranty => { %>
-                <li class="<%= warranty.verify ? 'verified' : 'unverified' %>">
+                <li class="<%= warranty.verify ? 'verified' : 'unverified' %>" data-serial="<%= warranty.serialNumber.toLowerCase() %>">
                     <strong>Serial Number:</strong> <%= warranty.serialNumber %><br>
                     <strong>Expiry Date:</strong><%=  new Date(warranty.expiryDate).toLocaleDateString()   %><br>
                     <strong>Name:</strong> <%= warranty.name %><br>
@@ -189,12 +236,10 @@
         </ul>
 
         <!-- Pagination controls -->
-        <!-- Pagination controls -->
-
-<div class="pagination-info">
+        <div class="pagination-info">
             Showing <%= (currentPage - 1) * itemsPerPage + 1 %> to <%= Math.min(currentPage * itemsPerPage, paginationInfo.totalWarranties) %> of <%= paginationInfo.totalWarranties %> warranties
         </div>
-<div class="pagination">
+        <div class="pagination">
             <button 
                 onclick="goToPage(1)" 
                 <%= currentPage === 1 ? 'disabled' : '' %>
@@ -236,6 +281,14 @@
         const itemsPerPage = 10;
         let currentPage = 1;
 
+        // Add event listener for Enter key in search input
+        document.getElementById('searchInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchWarranty();
+            }
+        });
+
         function goToPage(page) {
             // Show loading state
             document.body.style.cursor = 'wait';
@@ -246,7 +299,6 @@
 
             window.location.href = `/api/warrantyManagement/singel-Verified_Warranty?page=${page}`;
         }
-
 
         function filterWarranties(status) {
             const warrantyList = document.getElementById('warrantyList').getElementsByTagName('li');
@@ -263,39 +315,40 @@
         }
 
         function searchWarranty() {
-        const input = document.getElementById('searchInput');
-        const filter = input.value.toUpperCase();
-        const ul = document.getElementById('warrantyList');
-        const li = ul.getElementsByTagName('li');
-        let found = false;
-
-        for (let i = 0; i < li.length; i++) {
-            const serialNumber = li[i].getElementsByTagName("strong")[0].nextSibling.textContent;
-            if (serialNumber.toUpperCase().indexOf(filter) > -1) {
-                li[i].style.display = "";
-                found = true;
-            } else {
-                li[i].style.display = "none";
+            const input = document.getElementById('searchInput');
+            const filter = input.value.trim().toLowerCase();
+            const warrantyList = document.getElementById('warrantyList');
+            const warranties = warrantyList.getElementsByTagName('li');
+            const notFoundMessage = document.getElementById('notFoundMessage');
+            
+            let found = false;
+            
+            // If search is empty, show all items
+            if (filter === '') {
+                for (let i = 0; i < warranties.length; i++) {
+                    warranties[i].style.display = '';
+                }
+                notFoundMessage.style.display = 'none';
+                return;
             }
+            
+            // Search through all warranties
+            for (let i = 0; i < warranties.length; i++) {
+                const warranty = warranties[i];
+                const serialNumber = warranty.getAttribute('data-serial') || 
+                                     warranty.textContent.toLowerCase();
+                
+                if (serialNumber.includes(filter)) {
+                    warranty.style.display = '';
+                    found = true;
+                } else {
+                    warranty.style.display = 'none';
+                }
+            }
+            
+            // Show/hide "No results" message
+            notFoundMessage.style.display = found ? 'none' : 'block';
         }
-
-        // Handle "not found" message
-        let notFoundMessage = document.getElementById('notFoundMessage');
-        if (!found) {
-            if (!notFoundMessage) {
-                notFoundMessage = document.createElement('p');
-                notFoundMessage.id = 'notFoundMessage';
-                notFoundMessage.textContent = 'No warranties found.';
-                notFoundMessage.style.textAlign = 'center';
-                notFoundMessage.style.marginTop = '20px';
-                ul.appendChild(notFoundMessage);
-            }
-        } else {
-            if (notFoundMessage) {
-                notFoundMessage.remove();
-            }
-        }
-    }
 
         // Function to open update modal
         function openUpdateModal(warrantyId) {
@@ -333,6 +386,12 @@
             })
             .catch(error => console.error('Error updating warranty:', error));
         }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Clear search input on page load
+            document.getElementById('searchInput').value = '';
+        });
     </script>
 
 </body>

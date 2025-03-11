@@ -40,7 +40,7 @@
             border: 1px solid #ffcc99;
             border-radius: 5px;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
         }
 
         .serial-details {
@@ -54,6 +54,7 @@
             margin-left: 10px;
             border-left: 2px solid #ffcc99;
             padding-left: 10px;
+            min-width: 120px;
         }
 
         .actions button {
@@ -207,6 +208,20 @@
             background-color: #ccc;
             cursor: not-allowed;
         }
+        
+        .file-link {
+            background: none;
+            color: blue;
+            text-decoration: underline;
+            padding: 0;
+            margin: 0;
+            display: inline;
+        }
+        
+        .file-link:hover {
+            background: none;
+            color: darkblue;
+        }
     </style>
 </head>
 <body>
@@ -238,7 +253,7 @@
                             <strong>Serial Number:</strong> <%= serial.serialNumber %><br>
                             <strong>Model Number:</strong> <%= serial.modelNumber %><br>
                             <strong>Tested By:</strong> <%= serial.testedBy %><br>
-                            <strong>Uploaded File:</strong> <a href="/uploads/<%= serial.uploadedFile %>" target="_blank"><%= serial.uploadedFile %></a><br>
+                            <strong>Uploaded File:</strong> <a href="/uploads/<%= serial.uploadedFile %>" target="_blank" class="file-link"><%= serial.uploadedFile %></a><br>
                             <h2 style="color: #e65c00;text-align: left;">Machine Specification:</h2>
                             <strong>Processor:</strong> <%= serial.processor %><br>
                             <strong>Motherboard:</strong> <%= serial.motherboard %><br>
@@ -260,140 +275,19 @@
                             <strong>Keyboard Mouse Combo:</strong> <%= serial.keyboardMouseCombo %><br>
                             
                             <!-- Dynamic Fields -->
-                            <% if (serial.dynamicFields && serial.dynamicFields.size > 0) { %>
-
-                                <% for (const [key, value] of serial.dynamicFields) { %>
+                            <% if (serial.dynamicFields && Object.keys(serial.dynamicFields).length > 0) { %>
+                                <% for (const [key, value] of Object.entries(serial.dynamicFields)) { %>
                                     <strong><%= key %>:</strong> <%= value %><br>
                                 <% } %>
                             <% } %>
                         </div>
 
-                        <div id="overlay" class="overlay" onclick="hideUpdatePopup()"></div>
-                        <div id="updatePopup" class="popup">
-                            <h2>Update Serial Number</h2>
-                            <form action="/api/inventoryManagement/Inventory-update" method="POST" enctype="multipart/form-data">
-                                <input type="hidden" id="updateId" name="id">
-                        
-                                <!-- Existing fields from the add form -->
-                                <label for="updateSerialNumber">Serial Number:</label>
-                                <input type="text" id="updateSerialNumber" name="serialNumber">
-                                
-                                <label for="updateModelNumber">Model Number:</label>
-                                <input type="text" id="updateModelNumber" name="modelNumber">
-                                
-                                <label for="updateTestedBy">Tester:</label>
-                                <select id="updateTestedBy" name="testedBy" >
-                                    <% testers.forEach(tester => { %>
-                                        <option value="<%= tester._id %>"><%= tester.name %></option>
-                                    <% }) %>
-                                </select>
-                                
-                                <label for="updateUploadedFile">Upload File:</label>
-                                <input type="file" id="updateUploadedFile" name="uploadedFile">
-                                
-                                <label for="updateProcessor">Processor:</label>
-                                <input type="text" id="updateProcessor" name="processor">
-                                
-                                <label for="updateMotherboard">Motherboard:</label>
-                                <input type="text" id="updateMotherboard" name="motherboard">
-                                
-                                <label for="updateRAM1">RAM-1:</label>
-                                <input type="text" id="updateRAM1" name="RAM1">
-                                
-                                <label for="updateRAM2">RAM-2:</label>
-                                <input type="text" id="updateRAM2" name="RAM2">
-                                
-                                <label for="updateRAM3">RAM-3:</label>
-                                <input type="text" id="updateRAM3" name="RAM3">
-                                
-                                <label for="updateRAM4">RAM-4:</label>
-                                <input type="text" id="updateRAM4" name="RAM4">
-                                
-                                <label for="updateHDD1">HDD-1:</label>
-                                <input type="text" id="updateHDD1" name="HDD1">
-                                
-                                <label for="updateHDD2">HDD-2:</label>
-                                <input type="text" id="updateHDD2" name="HDD2">
-                                
-                                <label for="updateSSD_SATA">SSD SATA:</label>
-                                <input type="text" id="updateSSD_SATA" name="SSD_SATA">
-                                
-                                <label for="updateSSD_NVMe">SSD NVMe:</label>
-                                <input type="text" id="updateSSD_NVMe" name="SSD_NVMe">
-
-                                <label for="updateGraphicCard">Graphic Card:</label>
-                                <input type="text" id="updateGraphicCard" name="GraphicCard" >
-                                
-                                <label for="updateBluetoothModule">Bluetooth Module:</label>
-                                <input type="text" id="updateBluetoothModule" name="BluetoothModule">
-                                
-                                <label for="updateWifiModule">Wifi Module:</label>
-                                <input type="text" id="updateWifiModule" name="WifiModule">
-
-
-                                <label for="updateMonitorSize">Monitor Size:</label>
-                                <input type="text" id="updateMonitorSize" name="monitorSize">
-                                
-                                <label for="updateOperatingSystem">Operating System:</label>
-                                <input type="text" id="updateOperatingSystem" name="operatingSystem">
-                                
-                                <label for="updateKeyboardMouseCombo">Keyboard Mouse Combo:</label>
-                                <input type="text" id="updateKeyboardMouseCombo" name="keyboardMouseCombo" >
-                                
-                                <label for="updateSoftwareApp">Software / APP:</label>
-                                <input type="text" id="updateSoftwareApp" name="SoftwareApp">
-                                
-                                <label for="updateAddOn">Add-On:</label>
-                                <input type="text" id="updateAddOn" name="AddOn">
-                                
-                                
-                                
-                                
-                        
-                                <!-- Dynamic Fields -->
-                                <div id="updateDynamicFields">
-                                    <!-- Dynamic fields will be populated here -->
-                                </div>
-                        
-                                <button type="submit">Update Serial</button>
-                                <button type="button" class="cancel-btn" onclick="hideUpdatePopup()">Cancel</button>
-                            </form>
+                        <div class="actions">
+                            <button class="update-btn" onclick="showUpdatePopup('<%= serial._id %>')">Update</button>
+                            
                         </div>
-                        
-
-    <div class="actions">
-        <button class="update-btn" onclick="showUpdatePopup(
-    '<%= serial._id %>',
-    '<%= serial.serialNumber %>',
-    '<%= serial.modelNumber %>',
-    '<%= serial.testedBy %>',
-    '<%= serial.processor %>',
-    '<%= serial.motherboard %>',
-    '<%= serial.RAM1 %>',
-    '<%= serial.RAM2 %>',
-    '<%= serial.RAM3 %>',
-    '<%= serial.RAM4 %>',
-    '<%= serial.HDD1 %>',
-    '<%= serial.HDD2 %>',
-    '<%= serial.SSD_SATA %>',
-    '<%= serial.SSD_NVMe %>',
-    '<%= serial.WifiModule %>',
-    '<%= serial.SoftwareApp %>',
-    '<%= serial.AddOn %>',
-    '<%= serial.GraphicCard %>',
-    '<%= serial.BluetoothModule %>',
-    '<%= serial.monitorSize %>',
-    '<%= serial.operatingSystem %>',
-    '<%= serial.keyboardMouseCombo %>',
-    <%= JSON.stringify(serial.dynamicFields) %>
-)">Update</button>
-
-        <!-- <form action="/api/inventoryManagement/Inventory-delete/<%= serial._id %>?_method=DELETE" method="POST">
-            <button class="delete-btn" type="submit" onclick="return confirm('Are you sure you want to delete this serial number?')">Delete</button>
-        </form> -->
-    </div>
-</li>
-<% }) %>
+                    </li>
+                <% }) %>
             </ul>
         </div>
         <div class="pagination">
@@ -402,20 +296,126 @@
         </div>
     </div>
 
+    <!-- Global overlay and popup for all items -->
+    <div id="overlay" class="overlay" onclick="hideUpdatePopup()"></div>
+    <div id="updatePopup" class="popup">
+        <h2>Update Serial Number</h2>
+        <form id="updateForm" action="/api/inventoryManagement/Inventory-update" method="POST" enctype="multipart/form-data">
+            <input type="hidden" id="updateId" name="id">
+    
+            <!-- Basic information -->
+            <label for="updateSerialNumber">Serial Number:</label>
+            <input type="text" id="updateSerialNumber" name="serialNumber" required>
+            
+            <label for="updateModelNumber">Model Number:</label>
+            <input type="text" id="updateModelNumber" name="modelNumber" required>
+            
+            <label for="updateTestedBy">Tester:</label>
+            <select id="updateTestedBy" name="testedBy">
+                <% testers.forEach(tester => { %>
+                    <option value="<%= tester._id %>"><%= tester.name %></option>
+                <% }) %>
+            </select>
+            
+            <label for="updateUploadedFile">Upload File:</label>
+            <input type="file" id="updateUploadedFile" name="uploadedFile">
+            <p><small>Leave empty to keep current file</small></p>
+            
+            <!-- Specifications -->
+            <label for="updateProcessor">Processor:</label>
+            <input type="text" id="updateProcessor" name="processor">
+            
+            <label for="updateMotherboard">Motherboard:</label>
+            <input type="text" id="updateMotherboard" name="motherboard">
+            
+            <label for="updateRAM1">RAM-1:</label>
+            <input type="text" id="updateRAM1" name="RAM1">
+            
+            <label for="updateRAM2">RAM-2:</label>
+            <input type="text" id="updateRAM2" name="RAM2">
+            
+            <label for="updateRAM3">RAM-3:</label>
+            <input type="text" id="updateRAM3" name="RAM3">
+            
+            <label for="updateRAM4">RAM-4:</label>
+            <input type="text" id="updateRAM4" name="RAM4">
+            
+            <label for="updateHDD1">HDD-1:</label>
+            <input type="text" id="updateHDD1" name="HDD1">
+            
+            <label for="updateHDD2">HDD-2:</label>
+            <input type="text" id="updateHDD2" name="HDD2">
+            
+            <label for="updateSSD_SATA">SSD SATA:</label>
+            <input type="text" id="updateSSD_SATA" name="SSD_SATA">
+            
+            <label for="updateSSD_NVMe">SSD NVMe:</label>
+            <input type="text" id="updateSSD_NVMe" name="SSD_NVMe">
+
+            <label for="updateGraphicCard">Graphic Card:</label>
+            <input type="text" id="updateGraphicCard" name="GraphicCard">
+            
+            <label for="updateBluetoothModule">Bluetooth Module:</label>
+            <input type="text" id="updateBluetoothModule" name="BluetoothModule">
+            
+            <label for="updateWifiModule">Wifi Module:</label>
+            <input type="text" id="updateWifiModule" name="WifiModule">
+
+            <label for="updateMonitorSize">Monitor Size:</label>
+            <input type="text" id="updateMonitorSize" name="monitorSize">
+            
+            <label for="updateOperatingSystem">Operating System:</label>
+            <input type="text" id="updateOperatingSystem" name="operatingSystem">
+            
+            <label for="updateKeyboardMouseCombo">Keyboard Mouse Combo:</label>
+            <input type="text" id="updateKeyboardMouseCombo" name="keyboardMouseCombo">
+            
+            <label for="updateSoftwareApp">Software / APP:</label>
+            <input type="text" id="updateSoftwareApp" name="SoftwareApp">
+            
+            <label for="updateAddOn">Add-On:</label>
+            <input type="text" id="updateAddOn" name="AddOn">
+            
+            <!-- Dynamic Fields -->
+            <div id="updateDynamicFields">
+                <!-- Dynamic fields will be populated here -->
+            </div>
+    
+            <button type="submit">Update Serial</button>
+            <button type="button" class="cancel-btn" onclick="hideUpdatePopup()">Cancel</button>
+        </form>
+    </div>
+
     <script>
         let currentPage = 1;
         const itemsPerPage = 10;
+        let serialsData = []; // Store serialsData globally
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Store all serialsData for use in the update popup
+            try {
+                const listItems = document.querySelectorAll('#serialList li');
+                listItems.forEach((item, index) => {
+                    const serialId = item.querySelector('.update-btn').getAttribute('onclick').match(/'([^']+)'/)[1];
+                    serialsData.push({
+                        id: serialId,
+                        element: item
+                    });
+                });
+            } catch (error) {
+                console.error("Error initializing serialsData:", error);
+            }
+            
             showPage(currentPage);
+            updatePaginationButtons();
         });
 
-
         function nextPage() {
-            const totalPages = Math.ceil(document.getElementById('serialList').children.length / itemsPerPage);
+            const totalPages = Math.ceil(getVisibleItems().length / itemsPerPage);
             if (currentPage < totalPages) {
                 currentPage++;
                 showPage(currentPage);
+                updatePaginationButtons();
             }
         }
 
@@ -423,105 +423,193 @@
             if (currentPage > 1) {
                 currentPage--;
                 showPage(currentPage);
+                updatePaginationButtons();
             }
+        }
+
+        function getVisibleItems() {
+            const serialList = document.getElementById('serialList');
+            return Array.from(serialList.children).filter(serial => 
+                serial.style.display !== 'none' && getComputedStyle(serial).display !== 'none'
+            );
         }
 
         function filterSerials() {
-    const filter = document.getElementById('searchInput').value.toUpperCase();
-    const serialList = document.getElementById('serialList');
-    const serials = serialList.getElementsByTagName('li');
-    let visibleCount = 0;
+            const filter = document.getElementById('searchInput').value.toUpperCase();
+            const serialList = document.getElementById('serialList');
+            const serials = serialList.getElementsByTagName('li');
+            let visibleCount = 0;
 
-    Array.from(serials).forEach(serial => {
-        const serialDetails = serial.querySelector('.serial-details').textContent.toUpperCase();
-        if (serialDetails.includes(filter)) {
-            serial.style.display = '';
-            visibleCount++;
-        } else {
-            serial.style.display = 'none';
+            Array.from(serials).forEach(serial => {
+                const serialDetails = serial.querySelector('.serial-details').textContent.toUpperCase();
+                if (serialDetails.includes(filter)) {
+                    serial.style.display = '';
+                    visibleCount++;
+                } else {
+                    serial.style.display = 'none';
+                }
+            });
+
+            currentPage = 1;
+            updatePaginationButtons();
+            showPage(currentPage);
         }
-    });
 
-    currentPage = 1;
-    updatePagination(visibleCount);
-}
-
-function updatePagination(visibleCount) {
-    const totalPages = Math.ceil(visibleCount / itemsPerPage);
-    document.getElementById('prevBtn').classList.toggle('disabled', currentPage === 1);
-    document.getElementById('nextBtn').classList.toggle('disabled', currentPage === totalPages || totalPages === 0);
-    showPage(currentPage);
-}
-
-function showPage(page) {
-    const serialList = document.getElementById('serialList');
-    const serials = Array.from(serialList.children).filter(serial => serial.style.display !== 'none');
-    const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-
-    serials.forEach((serial, index) => {
-        if (index >= startIndex && index < endIndex) {
-            serial.style.display = 'flex';
-        } else {
-            serial.style.display = 'none';
+        function updatePaginationButtons() {
+            const visibleItems = getVisibleItems();
+            const totalPages = Math.ceil(visibleItems.length / itemsPerPage);
+            
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('prevBtn').classList.toggle('disabled', currentPage === 1);
+            
+            document.getElementById('nextBtn').disabled = currentPage === totalPages || totalPages === 0;
+            document.getElementById('nextBtn').classList.toggle('disabled', currentPage === totalPages || totalPages === 0);
         }
-    });
-}
 
+        function showPage(page) {
+            const visibleItems = getVisibleItems();
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
 
+            visibleItems.forEach((item, index) => {
+                if (index >= startIndex && index < endIndex) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
 
-        
-    function showUpdatePopup(id, serialNumber, modelNumber, testedBy, processor, motherboard, RAM1, RAM2, RAM3, RAM4, HDD1, HDD2, SSD_SATA, SSD_NVMe, WifiModule, SoftwareApp, AddOn, GraphicCard, BluetoothModule, monitorSize, operatingSystem, keyboardMouseCombo, dynamicFields) {
-        const overlay = document.getElementById('overlay');
-        const updatePopup = document.getElementById('updatePopup');
+        function showUpdatePopup(id) {
+            // Find the serial item in the DOM
+            const item = document.querySelector(`li .update-btn[onclick*="${id}"]`).closest('li');
+            if (!item) {
+                console.error("Serial item not found for ID:", id);
+                return;
+            }
 
-        document.getElementById('updateId').value = id;
-        document.getElementById('updateSerialNumber').value = serialNumber;
-        document.getElementById('updateModelNumber').value = modelNumber;
-        document.getElementById('updateTestedBy').value = testedBy; // You may need to select the correct option
-        document.getElementById('updateProcessor').value = processor;
-        document.getElementById('updateMotherboard').value = motherboard;
-        document.getElementById('updateRAM1').value = RAM1;
-        document.getElementById('updateRAM2').value = RAM2;
-        document.getElementById('updateRAM3').value = RAM3;
-        document.getElementById('updateRAM4').value = RAM4;
-        document.getElementById('updateHDD1').value = HDD1;
-        document.getElementById('updateHDD2').value = HDD2;
-        document.getElementById('updateSSD_SATA').value = SSD_SATA;
-        document.getElementById('updateSSD_NVMe').value = SSD_NVMe;
-        document.getElementById('updateWifiModule').value = WifiModule;
-        document.getElementById('updateSoftwareApp').value = SoftwareApp;
-        document.getElementById('updateAddOn').value = AddOn;
-        document.getElementById('updateGraphicCard').value = GraphicCard;
-        document.getElementById('updateBluetoothModule').value = BluetoothModule;
-        document.getElementById('updateMonitorSize').value = monitorSize;
-        document.getElementById('updateOperatingSystem').value = operatingSystem;
-        document.getElementById('updateKeyboardMouseCombo').value = keyboardMouseCombo;
+            // Extract all needed data from the item
+            const serialNumber = item.querySelector('.serial-details')
+                .innerHTML.match(/<strong>Serial Number:<\/strong> ([^<]+)<br>/)[1].trim();
+                
+            const modelNumber = item.querySelector('.serial-details')
+                .innerHTML.match(/<strong>Model Number:<\/strong> ([^<]+)<br>/)[1].trim();
+                
+            const testedBy = item.querySelector('.serial-details')
+                .innerHTML.match(/<strong>Tested By:<\/strong> ([^<]+)<br>/)[1].trim();
+                
+            // Get other fields using a helper function
+            function getFieldValue(fieldName) {
+                const regex = new RegExp(`<strong>${fieldName}:<\\/strong> ([^<]+)<br>`, 'i');
+                const match = item.querySelector('.serial-details').innerHTML.match(regex);
+                return match ? match[1].trim() : '';
+            }
 
-        // Handle dynamic fields if necessary
-        const dynamicFieldsContainer = document.getElementById('updateDynamicFields');
-        dynamicFieldsContainer.innerHTML = ''; // Clear existing dynamic fields
-        if (dynamicFields) {
-            for (const [key, value] of Object.entries(dynamicFields)) {
-                dynamicFieldsContainer.innerHTML += `
-                    <label for="updateDynamicField_${key}">${key}:</label>
-                    <input type="text" id="updateDynamicField_${key}" name="${key}" value="${value}">
-                `;
+            // Set form values
+            document.getElementById('updateId').value = id;
+            document.getElementById('updateSerialNumber').value = serialNumber;
+            document.getElementById('updateModelNumber').value = modelNumber;
+            
+            // Try to select the correct tester in the dropdown
+            const testerSelect = document.getElementById('updateTestedBy');
+            for (let i = 0; i < testerSelect.options.length; i++) {
+                if (testerSelect.options[i].text === testedBy) {
+                    testerSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            // Set other field values
+            document.getElementById('updateProcessor').value = getFieldValue('Processor');
+            document.getElementById('updateMotherboard').value = getFieldValue('Motherboard');
+            document.getElementById('updateRAM1').value = getFieldValue('RAM-1');
+            document.getElementById('updateRAM2').value = getFieldValue('RAM-2');
+            document.getElementById('updateRAM3').value = getFieldValue('RAM-3');
+            document.getElementById('updateRAM4').value = getFieldValue('RAM-4');
+            document.getElementById('updateHDD1').value = getFieldValue('HDD-1');
+            document.getElementById('updateHDD2').value = getFieldValue('HDD-2');
+            document.getElementById('updateSSD_SATA').value = getFieldValue('SSD SATA');
+            document.getElementById('updateSSD_NVMe').value = getFieldValue('SSD NVMe');
+            document.getElementById('updateWifiModule').value = getFieldValue('Wifi Module');
+            document.getElementById('updateSoftwareApp').value = getFieldValue('Software / APP');
+            document.getElementById('updateAddOn').value = getFieldValue('Add-On');
+            document.getElementById('updateGraphicCard').value = getFieldValue('Graphic Card');
+            document.getElementById('updateBluetoothModule').value = getFieldValue('Bluetooth Module');
+            document.getElementById('updateMonitorSize').value = getFieldValue('Monitor Size');
+            document.getElementById('updateOperatingSystem').value = getFieldValue('Operating System');
+            document.getElementById('updateKeyboardMouseCombo').value = getFieldValue('Keyboard Mouse Combo');
+
+            // Clear and rebuild dynamic fields
+            const dynamicFieldsContainer = document.getElementById('updateDynamicFields');
+            dynamicFieldsContainer.innerHTML = '';
+            
+            // Look for dynamic fields - they appear after all the standard fields
+            const dynamicFieldsRegex = /<strong>([^<:]+):<\/strong> ([^<]+)<br>/g;
+            const content = item.querySelector('.serial-details').innerHTML;
+            
+            // Get the index of the last standard field
+            const lastStandardField = 'Keyboard Mouse Combo:';
+            const lastStandardIndex = content.indexOf(lastStandardField);
+            
+            if (lastStandardIndex !== -1) {
+                const dynamicFieldsContent = content.substring(lastStandardIndex + lastStandardField.length);
+                let match;
+                
+                // Find all dynamic fields after the standard fields
+                while ((match = dynamicFieldsRegex.exec(dynamicFieldsContent)) !== null) {
+                    const fieldName = match[1].trim();
+                    const fieldValue = match[2].trim();
+                    
+                    // Skip any standard fields that might be matched by mistake
+                    if (['Serial Number', 'Model Number', 'Tested By', 'Processor', 
+                         'Motherboard', 'RAM-1', 'RAM-2', 'RAM-3', 'RAM-4', 'HDD-1', 
+                         'HDD-2', 'SSD SATA', 'SSD NVMe', 'Wifi Module', 'Software / APP', 
+                         'Add-On', 'Graphic Card', 'Bluetooth Module', 'Monitor Size', 
+                         'Operating System', 'Keyboard Mouse Combo'].includes(fieldName)) {
+                        continue;
+                    }
+                    
+                    dynamicFieldsContainer.innerHTML += `
+                        <label for="updateDynamicField_${fieldName}">${fieldName}:</label>
+                        <input type="text" id="updateDynamicField_${fieldName}" name="dynamicFields[${fieldName}]" value="${fieldValue}">
+                    `;
+                }
+            }
+
+            // Show the popup
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('updatePopup').style.display = 'block';
+        }
+
+        function hideUpdatePopup() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('updatePopup').style.display = 'none';
+        }
+
+        function deleteSerial(id) {
+            if (confirm('Are you sure you want to delete this serial number?')) {
+                window.location.href = `/api/inventoryManagement/Inventory-delete/${id}`;
             }
         }
 
-        overlay.style.display = 'block';
-        updatePopup.style.display = 'block';
-    }
-
-    function hideUpdatePopup() {
-        const overlay = document.getElementById('overlay');
-        const updatePopup = document.getElementById('updatePopup');
-
-        overlay.style.display = 'none';
-        updatePopup.style.display = 'none';
-    }
-
+        // Form validation
+        document.getElementById('updateForm').addEventListener('submit', function(event) {
+            // Basic validation
+            const serialNumber = document.getElementById('updateSerialNumber').value;
+            const modelNumber = document.getElementById('updateModelNumber').value;
+            
+            if (!serialNumber.trim()) {
+                alert('Serial Number is required');
+                event.preventDefault();
+                return;
+            }
+            
+            if (!modelNumber.trim()) {
+                alert('Model Number is required');
+                event.preventDefault();
+                return;
+            }
+        });
     </script>
 </body>
 </html>

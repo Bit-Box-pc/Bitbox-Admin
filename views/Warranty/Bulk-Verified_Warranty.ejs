@@ -53,7 +53,76 @@
         }
         .pagination button.disabled {
             background-color: orange;
+            opacity: 0.6;
             cursor: not-allowed;
+        }
+        
+        /* Search container styling */
+        .search-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .search-container input {
+            width: 60%;
+            padding: 10px;
+            border: 3px solid orange;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        .search-container button {
+            padding: 10px 15px;
+            background-color: orange;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        /* No results message */
+        #notFoundMessage {
+            text-align: center;
+            color: red;
+            font-weight: bold;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        /* Table styling */
+        .serial-model-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        .serial-model-table th, 
+        .serial-model-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .serial-model-table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        
+        .serial-model-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .serial-model-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        /* Highlight search matches */
+        .highlight {
+            background-color: yellow;
+            padding: 2px;
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -80,19 +149,23 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         <h2>All Verified Warranties</h2>
         <div class="controls">
-            <!-- <button onclick="filterWarranties('verified')">Verified</button> -->
-            <!-- <button onclick="filterWarranties('unverified')">Unverified</button> -->
-            <input type="text" style="border-width: 5px;border-color: orange;" id="searchInput" placeholder="Search by Serial Number" onkeyup="searchWarranty()">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search by Serial Number or Batch ID">
+                <button onclick="searchWarranty()">Search</button>
+            </div>
         </div>
+        
+        <!-- No results message -->
+        <p id="notFoundMessage">No warranties found matching your search criteria.</p>
+        
         <ul id="warrantyList">
             <% groupedWarranties.forEach(group => { %>
-     
-                <li class="<%= group.commonFields.verify ? 'verified' : 'unverified' %>">
+                <li class="<%= group.commonFields.verify ? 'verified' : 'unverified' %>" data-batch="<%= group._id.toLowerCase() %>">
                     <strong>Batch:</strong> <%= group._id %><br>
                     <strong>Name:</strong> <%= group.commonFields.name %><br>
                     <strong>Email:</strong> <%= group.commonFields.email %><br>
                     <strong>Purchase Date:</strong> <%= group.commonFields.purchaseDate.toDateString() %><br>
-                    <strong>Expiry Date:</strong> <%= new Date(group.commonFields.expiryDate).toLocaleDateString()   %><br>
+                    <strong>Expiry Date:</strong> <%= new Date(group.commonFields.expiryDate).toLocaleDateString() %><br>
                     <strong>Address:</strong> <%= group.commonFields.address %><br>
                     <strong>City:</strong> <%= group.commonFields.city %><br>
                     <strong>Pincode:</strong> <%= group.commonFields.pincode %><br>
@@ -102,7 +175,6 @@
                     <strong>Verified:</strong> <%= group.commonFields.verify ? 'Yes' : 'No' %><br>
                     <strong>Vendor:</strong> <%= group.commonFields.purchaseDetails %><br>
                     <strong>Warranty Type:</strong> <%= group.commonFields.warrantyType %><br>
-                    <!-- <strong>Certificate ID:</strong> <%= group.commonFields.certificateID %><br> -->
 
                     <h4>Serial Numbers and Models:</h4>
                     <table class="serial-model-table">
@@ -115,7 +187,7 @@
                         </thead>
                         <tbody>
                             <% group.serialAndModel.forEach(item => { %>
-                                <tr>
+                                <tr data-serial="<%= item.serialNumber.toLowerCase() %>">
                                     <td><%= item.serialNumber %></td>
                                     <td><%= item.model %></td>
                                     <td>
@@ -140,7 +212,7 @@
                             <form id="updateForm_<%= group._id %>" onsubmit="submitUpdateForm('<%= group._id %>'); return false;">
                                 <h2>Update Warranty Information</h2>
                                 <label>Batch ID:</label>
-                                <input type="text" value="<%= group._id %>" ><br><br>
+                                <input type="text" value="<%= group._id %>" readonly><br><br>
                                 <label>Name:</label>
                                 <input type="text" name="name" value="<%= group.commonFields.name %>" required><br><br>
                                 <label>Vendor:</label>
@@ -163,7 +235,7 @@
                                 %>
                                 <label>Duration (Years):</label>
                                 <input type="number" name="duration" value="<%= duration %>" ><br><br>
-                                <!--  -->
+                                
                                 <label>City:</label>
                                 <input type="text" name="city" value="<%= group.commonFields.city %>" required><br><br>
                                 <label>Pincode:</label>
@@ -215,89 +287,179 @@
     </div>
 
     <script>
+        // Variables for pagination
         const itemsPerPage = 10;
         let currentPage = 1;
-        const warrantyList = document.getElementById('warrantyList').children; 
-        //(warrantyList.length);
-        const totalPages = Math.ceil(warrantyList.length / itemsPerPage);
+        let warrantyItems = Array.from(document.getElementById('warrantyList').children);
+        let filteredItems = [...warrantyItems]; // Keep track of currently filtered items
+        const totalPages = Math.ceil(warrantyItems.length / itemsPerPage);
 
+        // Add event listener for the search input to handle Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                searchWarranty();
+            }
+        });
+
+        // Function to show a specific page
         function showPage(page) {
             currentPage = page;
             const start = (page - 1) * itemsPerPage;
             const end = start + itemsPerPage;
-            for (let i = 0; i < warrantyList.length; i++) {
-                warrantyList[i].style.display = (i >= start && i < end) ? 'block' : 'none';
+            
+            // Hide all warranty items first
+            filteredItems.forEach(item => {
+                item.style.display = 'none';
+            });
+            
+            // Show only the items for current page
+            for (let i = start; i < end && i < filteredItems.length; i++) {
+                filteredItems[i].style.display = 'block';
             }
+            
             updatePaginationControls();
         }
 
+        // Update pagination controls based on filtered items
         function updatePaginationControls() {
             const paginationControls = document.getElementById('paginationControls');
             paginationControls.innerHTML = '';
-            for (let i = 1; i <= totalPages; i++) {
+            
+            const totalFilteredPages = Math.ceil(filteredItems.length / itemsPerPage);
+            
+            if (totalFilteredPages <= 1) {
+                // No pagination needed
+                return;
+            }
+            
+            // Add "Previous" button
+            const prevButton = document.createElement('button');
+            prevButton.textContent = 'Previous';
+            prevButton.onclick = () => {
+                if (currentPage > 1) showPage(currentPage - 1);
+            };
+            prevButton.disabled = currentPage === 1;
+            prevButton.classList.toggle('disabled', currentPage === 1);
+            paginationControls.appendChild(prevButton);
+            
+            // Determine which page buttons to show
+            const maxVisibleButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisibleButtons / 2));
+            let endPage = Math.min(totalFilteredPages, startPage + maxVisibleButtons - 1);
+            
+            if (endPage - startPage + 1 < maxVisibleButtons) {
+                startPage = Math.max(1, endPage - maxVisibleButtons + 1);
+            }
+            
+            // Add page number buttons
+            for (let i = startPage; i <= endPage; i++) {
                 const button = document.createElement('button');
                 button.textContent = i;
                 button.classList.toggle('disabled', i === currentPage);
                 button.onclick = () => showPage(i);
                 paginationControls.appendChild(button);
             }
+            
+            // Add "Next" button
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'Next';
+            nextButton.onclick = () => {
+                if (currentPage < totalFilteredPages) showPage(currentPage + 1);
+            };
+            nextButton.disabled = currentPage === totalFilteredPages;
+            nextButton.classList.toggle('disabled', currentPage === totalFilteredPages);
+            paginationControls.appendChild(nextButton);
         }
 
-        function filterWarranties(status) {
-            const allWarranties = Array.from(warrantyList);
-            allWarranties.forEach(warranty => {
-                if (status === 'verified') {
-                    warranty.style.display = warranty.classList.contains('verified') ? 'block' : 'none';
-                } else if (status === 'unverified') {
-                    warranty.style.display = warranty.classList.contains('unverified') ? 'block' : 'none';
-                } else {
-                    warranty.style.display = 'block';
+        // Search function
+        function searchWarranty() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.trim().toLowerCase();
+            const notFoundMessage = document.getElementById('notFoundMessage');
+            
+            // If search is empty, reset to show all warranties
+            if (filter === '') {
+                filteredItems = [...warrantyItems];
+                notFoundMessage.style.display = 'none';
+                currentPage = 1;
+                showPage(1);
+                return;
+            }
+            
+            // Filter warranty items
+            filteredItems = warrantyItems.filter(item => {
+                // Check batch ID
+                const batchId = item.getAttribute('data-batch') || '';
+                if (batchId.includes(filter)) return true;
+                
+                // Check all serial numbers in the table rows
+                const serialRows = Array.from(item.querySelectorAll('tr[data-serial]'));
+                return serialRows.some(row => {
+                    const serialNumber = row.getAttribute('data-serial') || '';
+                    return serialNumber.includes(filter);
+                });
+            });
+            
+            // Show/hide "No results" message
+            notFoundMessage.style.display = filteredItems.length === 0 ? 'block' : 'none';
+            
+            // Reset to first page and update display
+            currentPage = 1;
+            showPage(1);
+            
+            // Optional: Highlight matches
+            if (filter !== '') {
+                highlightMatches(filter);
+            } else {
+                clearHighlights();
+            }
+        }
+        
+        // Function to highlight search matches
+        function highlightMatches(searchText) {
+            // First clear existing highlights
+            clearHighlights();
+            
+            if (!searchText.trim()) return;
+            
+            // Find all visible warranty items
+            filteredItems.forEach(item => {
+                // Highlight batch ID if it matches
+                const batchText = item.querySelector('strong:first-child').nextSibling;
+                if (batchText && batchText.textContent.toLowerCase().includes(searchText)) {
+                    const highlighted = batchText.textContent.replace(
+                        new RegExp(searchText, 'gi'),
+                        match => `<span class="highlight">${match}</span>`
+                    );
+                    // Need to create a temp element to hold the HTML
+                    const tempSpan = document.createElement('span');
+                    tempSpan.innerHTML = highlighted;
+                    batchText.parentNode.replaceChild(tempSpan, batchText);
                 }
+                
+                // Highlight serial numbers
+                const serialCells = item.querySelectorAll('td:first-child');
+                serialCells.forEach(cell => {
+                    if (cell.textContent.toLowerCase().includes(searchText)) {
+                        cell.innerHTML = cell.textContent.replace(
+                            new RegExp(searchText, 'gi'),
+                            match => `<span class="highlight">${match}</span>`
+                        );
+                    }
+                });
+            });
+        }
+        
+        // Function to clear highlights
+        function clearHighlights() {
+            document.querySelectorAll('.highlight').forEach(span => {
+                const parent = span.parentNode;
+                parent.textContent = parent.textContent; // This removes all HTML and keeps just the text
             });
         }
 
-        function searchWarranty() {
-    const input = document.getElementById('searchInput');
-    const filter = input.value.toUpperCase();
-    const ul = document.getElementById('warrantyList');
-    const li = ul.getElementsByTagName('li');
-    let found = false;
-
-    for (let i = 0; i < li.length; i++) {
-        // Retrieve the serial numbers for each <li> element
-        const serialNumbers = Array.from(li[i].getElementsByTagName("td"))
-            .map(td => td.textContent.toUpperCase())
-            .filter(text => text); // Ensure there's text to filter
-
-        // Check if any serial number contains the search filter text
-        const matches = serialNumbers.some(serialNumber => serialNumber.indexOf(filter) > -1);
-        li[i].style.display = matches ? 'block' : 'none';
-
-        if (matches) {
-            found = true;
-        }
-    }
-
-    // Check if no warranties were found
-    const notFoundMessage = document.getElementById('notFoundMessage');
-    if (!found) {
-        if (!notFoundMessage) {
-            const message = document.createElement('p');
-            message.id = 'notFoundMessage';
-            message.textContent = 'No warranties found.';
-            message.style.textAlign = 'center';
-            message.style.marginTop = '20px';
-            ul.parentNode.insertBefore(message, ul.nextSibling);
-        }
-    } else {
-        if (notFoundMessage) {
-            notFoundMessage.remove();
-        }
-    }
-}
-
-        showPage(1);
-
+        // Modal functions
         function openUpdateModal(batchId) {
             document.getElementById(`updateModal_${batchId}`).style.display = 'block';
         }
@@ -307,28 +469,42 @@
         }
 
         function submitUpdateForm(batchId) {
-    const form = document.getElementById(`updateForm_${batchId}`);
-    const formData = new FormData(form);
-    
-    fetch(`/api/warrantyManagement/update/${batchId}`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Warranty Updated');
-            location.reload(); // Reload the page to reflect changes
-        } else {
-            alert('Warranty Updated');
+            const form = document.getElementById(`updateForm_${batchId}`);
+            const formData = new FormData(form);
+            
+            fetch(`/api/warrantyManagement/update/${batchId}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Warranty Updated');
+                    location.reload(); // Reload the page to reflect changes
+                } else {
+                    alert('Warranty Updated');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Warranty Updated');
+            });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Warranty Updated');
-    });
-}
 
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add data attributes to all list items for better searching
+            warrantyItems.forEach(item => {
+                const batchId = item.querySelector('strong:first-child').nextSibling.textContent.trim();
+                item.setAttribute('data-batch', batchId.toLowerCase());
+            });
+            
+            // Initialize pagination
+            showPage(1);
+            
+            // Clear search input on page load
+            document.getElementById('searchInput').value = '';
+        });
     </script>
 </body>
 </html>
